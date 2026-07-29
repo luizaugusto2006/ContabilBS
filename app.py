@@ -599,6 +599,60 @@ def relatorio_saldos_discriminados():
                          total_entradas=total_entradas, total_saidas=total_saidas,
                          saldo_acumulado=saldo_acumulado)
 
+@app.route('/exportar-csv-saldos-discriminados')
+@login_required
+def exportar_csv_saldos_discriminados():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM meses WHERE fechado = 1 ORDER BY ano, mes")
+    meses = cursor.fetchall()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Mês', 'Total Entradas', 'Total Saídas', 'Saldo'])
+    for m in meses:
+        cursor.execute(
+            "SELECT COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) as te, "
+            "COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) as ts "
+            "FROM lancamentos WHERE mes_id = ?", (m['id'],)
+        )
+        t = cursor.fetchone()
+        saldo = m['saldo_inicial'] + t['te'] - t['ts']
+        writer.writerow([f"{m['mes']:02d}/{m['ano']}",
+                        f"{t['te']:.2f}", f"{t['ts']:.2f}", f"{saldo:.2f}"])
+    conn.close()
+    return Response(
+        output.getvalue().encode('utf-8-sig'),
+        mimetype='text/csv',
+        headers={"Content-Disposition": "attachment;filename=saldos_discriminados.csv"}
+    )
+
+@app.route('/print-saldos-discriminados')
+@login_required
+def print_saldos_discriminados():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM meses WHERE fechado = 1 ORDER BY ano, mes")
+    meses = cursor.fetchall()
+    dados = []
+    for m in meses:
+        cursor.execute(
+            "SELECT COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) as te, "
+            "COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) as ts "
+            "FROM lancamentos WHERE mes_id = ?", (m['id'],)
+        )
+        t = cursor.fetchone()
+        saldo = m['saldo_inicial'] + t['te'] - t['ts']
+        dados.append({'mes': f"{m['mes']:02d}/{m['ano']}",
+                      'entradas': t['te'], 'saidas': t['ts'],
+                      'saldo': saldo})
+    conn.close()
+    total_entradas = sum(d['entradas'] for d in dados)
+    total_saidas = sum(d['saidas'] for d in dados)
+    saldo_acumulado = total_entradas - total_saidas
+    return render_template('print_saldos_discriminados.html', dados=dados,
+                         total_entradas=total_entradas, total_saidas=total_saidas,
+                         saldo_acumulado=saldo_acumulado, now=datetime.now())
+
 @app.route('/exportar-csv-saldos')
 @login_required
 def exportar_csv_saldos():

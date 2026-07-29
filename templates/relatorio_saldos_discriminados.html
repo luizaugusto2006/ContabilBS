@@ -37,6 +37,10 @@
             </tfoot>
         </table>
     </div>
+    <div class="detail-actions">
+        <a href="{{ url_for('exportar_csv_saldos_discriminados') }}" class="btn btn-success btn-small">Exportar CSV</a>
+        <a href="{{ url_for('print_saldos_discriminados') }}" target="_blank" class="btn btn-secondary btn-small">Imprimir / PDF</a>
+    </div>
     {% else %}
     <p class="empty-msg">Nenhum mês fechado ainda.</p>
     {% endif %}

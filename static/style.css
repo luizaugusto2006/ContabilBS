@@ -224,6 +224,31 @@ body {
     .form-row-filters { grid-template-columns: 1fr; }
 }
 
+.date-input-group {
+    display: flex;
+    gap: 5px;
+}
+
+.date-input-group input[type="text"] {
+    flex: 1;
+    min-width: 0;
+}
+
+.btn-calendar {
+    font-size: 1.1rem;
+    padding: 6px 10px;
+    cursor: pointer;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    line-height: 1;
+}
+
+.btn-calendar:hover {
+    background: #5a6fd6;
+}
+
 @media (max-width: 500px) {
     .form-row-4 { grid-template-columns: 1fr; }
 }
