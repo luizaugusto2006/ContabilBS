@@ -338,6 +338,10 @@ body {
     white-space: nowrap;
 }
 
+.table th.valor {
+    text-align: right;
+}
+
 .table td {
     padding: 8px 12px;
     border-bottom: 1px solid #eee;
