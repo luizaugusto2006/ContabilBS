@@ -230,6 +230,7 @@ def login():
         user = cursor.fetchone()
         conn.close()
         if user:
+            session.permanent = True
             session['logado'] = True
             session['ultimo_acesso'] = datetime.now().isoformat()
             session['usuario'] = user['usuario']
