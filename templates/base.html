@@ -6,6 +6,7 @@
     <title>Sistema Contábil Barrasul Táxi</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     {% block head_extra %}{% endblock %}
+    <script>if(!sessionStorage.getItem('bs_auth')){window.location.replace('/logout');}sessionStorage.setItem('bs_auth','1');</script>
 </head>
 <body>
     <div class="container">

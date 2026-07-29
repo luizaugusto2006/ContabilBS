@@ -236,8 +236,8 @@ def login():
             session['user_id'] = user['id']
             session['user_nome'] = user['nome']
             session['admin'] = user['admin'] == 1
-            flash('Login realizado com sucesso!', 'success')
-            return redirect(url_for('index'))
+            index_url = url_for('index')
+            return f'''<script>sessionStorage.setItem('bs_auth','1');window.location.replace('{index_url}');</script>'''
         flash('Usuário ou senha inválidos.', 'danger')
     return render_template('login.html')
 
