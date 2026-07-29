@@ -23,6 +23,7 @@
             <nav class="nav">
                 <a href="{{ url_for('index') }}" class="btn btn-nav">Lançamentos</a>
                 <a href="{{ url_for('relatorio') }}" class="btn btn-nav">Relatórios</a>
+                <a href="{{ url_for('relatorio_saldos') }}" class="btn btn-nav">Saldos</a>
                 {% if session.get('admin') %}
                     <a href="{{ url_for('ver_logs') }}" class="btn btn-nav">Logs</a>
                     <a href="{{ url_for('listar_usuarios') }}" class="btn btn-nav">Usuários</a>

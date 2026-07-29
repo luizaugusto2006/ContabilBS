@@ -504,6 +504,30 @@ def relatorio():
                          tem_mes_aberto=tem_mes_aberto,
                          todos_lancamentos=todos_lancamentos)
 
+@app.route('/relatorio-saldos')
+@login_required
+def relatorio_saldos():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM meses WHERE fechado = 1 ORDER BY ano, mes")
+    meses = cursor.fetchall()
+    dados = []
+    for m in meses:
+        cursor.execute(
+            "SELECT COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) as te, "
+            "COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) as ts "
+            "FROM lancamentos WHERE mes_id = ?", (m['id'],)
+        )
+        t = cursor.fetchone()
+        saldo = m['saldo_inicial'] + t['te'] - t['ts']
+        dados.append({'mes': m['mes'], 'ano': m['ano'],
+                      'saldo_inicial': m['saldo_inicial'],
+                      'entradas': t['te'], 'saidas': t['ts'],
+                      'saldo': saldo, 'fechado_em': m['fechado_em']})
+    conn.close()
+    saldo_acumulado = sum(d['saldo'] for d in dados)
+    return render_template('relatorio_saldos.html', dados=dados, saldo_acumulado=saldo_acumulado)
+
 @app.route('/dados-grafico')
 @login_required
 def dados_grafico():
