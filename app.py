@@ -261,8 +261,8 @@ def index():
     tipo_filtro = request.args.get('tipo', '')
 
     sql = ("SELECT l.*, m.mes, m.ano FROM lancamentos l "
-           "JOIN meses m ON l.mes_id = m.id WHERE 1=1")
-    params = []
+           "JOIN meses m ON l.mes_id = m.id WHERE l.mes_id = ?")
+    params = [mes_id]
     if tipo_filtro:
         sql += " AND l.tipo = ?"
         params.append(tipo_filtro)
@@ -273,7 +273,7 @@ def index():
     cursor.execute(
         "SELECT COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) as total_entradas, "
         "COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) as total_saidas "
-        "FROM lancamentos"
+        "FROM lancamentos WHERE mes_id = ?", (mes_id,)
     )
     totais = cursor.fetchone()
 
