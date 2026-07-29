@@ -76,6 +76,46 @@
     <a href="{{ url_for('novo_mes') }}" class="btn btn-primary">Iniciar Novo Mês</a>
 </div>
 {% endif %}
+
+<div class="card table-card">
+    <h3>Todos os Lançamentos</h3>
+    {% if todos_lancamentos %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Mês</th>
+                    <th>Tipo</th>
+                    <th>Valor</th>
+                    <th>Obs.</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in todos_lancamentos %}
+                <tr class="row-{{ l.tipo }}">
+                    <td>{{ l.data | data_br }}</td>
+                    <td>{{ l.descricao }}</td>
+                    <td>{{ l.mes }}/{{ l.ano }}</td>
+                    <td>
+                        {% if l.tipo == 'entrada' %}
+                            <span class="badge badge-entrada">Entrada</span>
+                        {% else %}
+                            <span class="badge badge-saida">Saída</span>
+                        {% endif %}
+                    </td>
+                    <td class="valor">{{ l.valor | brl }}</td>
+                    <td class="obs-cell">{{ l.observacao[:30] if l.observacao else '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-msg">Nenhum lançamento registrado.</p>
+    {% endif %}
+</div>
 {% endblock %}
 
 {% block scripts_extra %}

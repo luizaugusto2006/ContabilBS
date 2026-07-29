@@ -506,13 +506,21 @@ def relatorio():
     total_geral_saidas = sum(m['total_saidas'] for m in dados_meses)
     saldo_geral = total_geral_entradas - total_geral_saidas
     tem_mes_aberto = any(not m['fechado'] for m in dados_meses)
+
+    cursor.execute(
+        "SELECT l.*, m.mes, m.ano FROM lancamentos l "
+        "JOIN meses m ON l.mes_id = m.id ORDER BY l.data DESC, l.id DESC"
+    )
+    todos_lancamentos = cursor.fetchall()
+
     conn.close()
     return render_template('relatorio.html',
                          dados_meses=dados_meses,
                          total_geral_entradas=total_geral_entradas,
                          total_geral_saidas=total_geral_saidas,
                          saldo_geral=saldo_geral,
-                         tem_mes_aberto=tem_mes_aberto)
+                         tem_mes_aberto=tem_mes_aberto,
+                         todos_lancamentos=todos_lancamentos)
 
 @app.route('/dados-grafico')
 @login_required
