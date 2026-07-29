@@ -9,7 +9,12 @@
     <form method="POST" action="{{ url_for('adicionar') }}" class="form-lancamento">
         <div class="form-group">
             <label for="descricao">Descrição</label>
-            <input type="text" id="descricao" name="descricao" placeholder="Ex: Digite sua conta a cadastrar" required>
+            <input type="text" id="descricao" name="descricao" placeholder="Ex: Digite sua conta a cadastrar" required list="desc-list" autocomplete="off">
+            <datalist id="desc-list">
+                {% for d in descricoes %}
+                <option value="{{ d }}">
+                {% endfor %}
+            </datalist>
         </div>
         <div class="form-row-3">
             <div class="form-group">
@@ -42,16 +47,19 @@
 
 <div class="card table-card">
     <h3>Todos os Lançamentos</h3>
+    <div class="table-toolbar">
+        <input type="text" id="search-input" placeholder="Buscar na tabela..." class="search-input">
+    </div>
     {% if lancamentos %}
     <div class="table-wrapper">
-        <table class="table">
+        <table class="table sortable" id="lancamentos-table">
             <thead>
                 <tr>
-                    <th>Data</th>
-                    <th>Descrição</th>
+                    <th data-sort="data">Data &#8645;</th>
+                    <th data-sort="descricao">Descrição &#8645;</th>
                     <th>Mês</th>
-                    <th>Tipo</th>
-                    <th>Valor</th>
+                    <th data-sort="tipo">Tipo &#8645;</th>
+                    <th data-sort="valor" class="valor">Valor &#8645;</th>
                     <th>Obs.</th>
                     <th>Ações</th>
                 </tr>
@@ -59,17 +67,17 @@
             <tbody>
                 {% for l in lancamentos %}
                 <tr class="row-{{ l.tipo }}">
-                    <td>{{ l.data | data_br }}</td>
-                    <td>{{ l.descricao }}</td>
+                    <td class="col-data">{{ l.data | data_br }}</td>
+                    <td class="col-descricao">{{ l.descricao }}</td>
                     <td>{{ l.mes }}/{{ l.ano }}</td>
-                    <td>
+                    <td class="col-tipo">
                         {% if l.tipo == 'entrada' %}
                             <span class="badge badge-entrada">Entrada</span>
                         {% else %}
                             <span class="badge badge-saida">Saída</span>
                         {% endif %}
                     </td>
-                    <td class="valor">{{ l.valor | brl }}</td>
+                    <td class="valor col-valor" data-valor="{{ l.valor }}">{{ l.valor | brl }}</td>
                     <td class="obs-cell" title="{{ l.observacao }}">{{ l.observacao[:30] if l.observacao else '' }}</td>
                     <td class="actions-cell">
                         <a href="{{ url_for('editar', id=l.id) }}" class="btn btn-small btn-primary">Editar</a>
@@ -138,6 +146,48 @@ dataPicker.addEventListener('change', function() {
     if (!this.value) return;
     var p = this.value.split('-');
     dataInput.value = p[2] + '/' + p[1] + '/' + p[0];
+});
+
+document.getElementById('search-input').addEventListener('input', function() {
+    var q = this.value.toLowerCase();
+    document.querySelectorAll('#lancamentos-table tbody tr').forEach(function(row) {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+
+document.querySelectorAll('.table.sortable th[data-sort]').forEach(function(th) {
+    th.addEventListener('click', function() {
+        var tbody = this.closest('table').querySelector('tbody');
+        var rows = Array.from(tbody.querySelectorAll('tr'));
+        var key = this.dataset.sort;
+        var dir = this.classList.toggle('sort-asc') ? 1 : -1;
+        document.querySelectorAll('.table.sortable th').forEach(function(h) {
+            if (h !== th) h.classList.remove('sort-asc', 'sort-desc');
+        });
+        if (!dir) { dir = -1; this.classList.add('sort-desc'); }
+        rows.sort(function(a, b) {
+            var va, vb;
+            if (key === 'valor') {
+                va = parseFloat(a.querySelector('.col-valor').dataset.valor);
+                vb = parseFloat(b.querySelector('.col-valor').dataset.valor);
+            } else if (key === 'data') {
+                var pa = a.querySelector('.col-data').textContent.trim().split('/');
+                var pb = b.querySelector('.col-data').textContent.trim().split('/');
+                va = pa[2] + pa[1] + pa[0];
+                vb = pb[2] + pb[1] + pb[0];
+            } else if (key === 'tipo') {
+                va = a.querySelector('.col-tipo').textContent.trim();
+                vb = b.querySelector('.col-tipo').textContent.trim();
+            } else {
+                va = a.querySelector('.col-' + key).textContent.trim().toLowerCase();
+                vb = b.querySelector('.col-' + key).textContent.trim().toLowerCase();
+            }
+            if (va < vb) return -dir;
+            if (va > vb) return dir;
+            return 0;
+        });
+        rows.forEach(function(row) { tbody.appendChild(row); });
+    });
 });
 </script>
 {% endblock %}

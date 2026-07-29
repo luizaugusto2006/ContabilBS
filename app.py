@@ -393,6 +393,9 @@ def lancamentos():
     )
     totais = cursor.fetchone()
 
+    cursor.execute("SELECT DISTINCT descricao FROM lancamentos ORDER BY descricao")
+    descricoes = [r['descricao'] for r in cursor.fetchall()]
+
     cursor.execute(
         "SELECT COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) - "
         "COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) as saldo_acumulado "
@@ -415,7 +418,8 @@ def lancamentos():
                          saldo=saldo,
                          saldo_mes=saldo_mes,
                          today=date.today().strftime('%d/%m/%Y'),
-                         filtro_tipo=tipo_filtro)
+                         filtro_tipo=tipo_filtro,
+                         descricoes=descricoes)
 
 @app.route('/adicionar', methods=['POST'])
 @login_required

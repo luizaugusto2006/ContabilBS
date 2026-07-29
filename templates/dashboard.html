@@ -59,7 +59,9 @@
     </div>
 
     <div class="card">
-        <h3>Últimos Lançamentos</h3>
+        <div class="card-header-row">
+            <h3>Últimos Lançamentos</h3>
+        </div>
         {% if ultimos %}
         <div class="table-wrapper">
             <table class="table">
@@ -95,5 +97,47 @@
         <p class="empty-msg">Nenhum lançamento neste período.</p>
         {% endif %}
     </div>
+
+    <div class="card chart-card">
+        <h3>Entradas vs Saídas</h3>
+        <div class="chart-container">
+            <canvas id="dashChart" width="400" height="250"></canvas>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+new Chart(document.getElementById('dashChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Entradas', 'Saídas'],
+        datasets: [{
+            data: [{{ total_entradas }}, {{ total_saidas }}],
+            backgroundColor: ['#28a745', '#dc3545'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        var total = ctx.dataset.data.reduce(function(a,b){return a+b},0);
+                        var pct = total ? (ctx.parsed / total * 100).toFixed(1) : 0;
+                        return 'R$ ' + ctx.parsed.toFixed(2).replace('.',',') + ' (' + pct + '%)';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
 {% endblock %}

@@ -34,6 +34,7 @@
                     <a href="{{ url_for('listar_usuarios') }}" class="btn btn-nav">Usuários</a>
                 {% endif %}
                 <hr style="margin:4px 0;border:none;border-top:1px solid #eee;">
+                <a href="#" class="btn btn-nav btn-nav-dark" id="dark-toggle">Modo Escuro</a>
                 {% if session.get('admin') %}
                 <a href="{{ url_for('backup') }}" class="btn btn-nav btn-nav-backup" title="Download do banco de dados">Backup</a>
                 <form method="post" action="{{ url_for('restaurar_backup') }}" enctype="multipart/form-data" class="nav-form">
@@ -63,6 +64,12 @@
         </footer>
     </div>
     <script>
+        (function() {
+            if (localStorage.getItem('dark') === '1') {
+                document.body.classList.add('dark');
+            }
+        })();
+        document.getElementById('dark-toggle').textContent = localStorage.getItem('dark') === '1' ? 'Modo Claro' : 'Modo Escuro';
         setTimeout(function() {
             document.querySelectorAll('.alert').forEach(function(a) {
                 a.style.opacity = '0';
@@ -85,6 +92,12 @@
             if (!nav.contains(e.target) && !ham.contains(e.target)) {
                 nav.classList.remove('nav-open');
             }
+        });
+        document.getElementById('dark-toggle').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.body.classList.toggle('dark');
+            localStorage.setItem('dark', document.body.classList.contains('dark') ? '1' : '0');
+            this.textContent = document.body.classList.contains('dark') ? 'Modo Claro' : 'Modo Escuro';
         });
     </script>
     {% block scripts_extra %}{% endblock %}
