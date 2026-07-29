@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Saldos Discriminados</h2>
+    {% if dados %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Mês</th>
+                    <th class="valor">Total Entradas</th>
+                    <th class="valor">Total Saídas</th>
+                    <th class="valor">Saldo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in dados %}
+                <tr>
+                    <td><strong>{{ d.mes }}</strong></td>
+                    <td class="valor">{{ d.entradas | brl }}</td>
+                    <td class="valor">{{ d.saidas | brl }}</td>
+                    <td class="valor {% if d.saldo >= 0 %}saldo-positivo{% else %}saldo-negativo{% endif %}">
+                        {{ d.saldo | brl }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td><strong>Total Geral</strong></td>
+                    <td class="valor">{{ total_entradas | brl }}</td>
+                    <td class="valor">{{ total_saidas | brl }}</td>
+                    <td class="valor {% if saldo_acumulado >= 0 %}saldo-positivo{% else %}saldo-negativo{% endif %}">
+                        {{ saldo_acumulado | brl }}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-msg">Nenhum mês fechado ainda.</p>
+    {% endif %}
+</div>
+{% endblock %}
