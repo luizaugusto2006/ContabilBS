@@ -84,16 +84,16 @@ def create_tables():
         cursor.execute("ALTER TABLE usuarios ADD COLUMN admin INTEGER DEFAULT 0")
     except sqlite3.OperationalError:
         pass
-    cursor.execute("SELECT COUNT(*) as qtd FROM usuarios")
-    if cursor.fetchone()['qtd'] == 0:
+    cursor.execute("SELECT COUNT(*) FROM usuarios")
+    if cursor.fetchone()[0] == 0:
         cursor.execute(
             "INSERT INTO usuarios (usuario, senha, nome, admin) VALUES (?, ?, ?, 1)",
             ('admin', '123456', 'Administrador')
         )
     else:
         cursor.execute("UPDATE usuarios SET admin = 1 WHERE usuario = 'admin'")
-    cursor.execute("SELECT COUNT(*) as qtd FROM categorias")
-    if cursor.fetchone()['qtd'] == 0:
+    cursor.execute("SELECT COUNT(*) FROM categorias")
+    if cursor.fetchone()[0] == 0:
         categorias = [
             ('Corridas', 'entrada'), ('Outras Receitas', 'entrada'),
             ('Combustível', 'saida'), ('Manutenção', 'saida'),
