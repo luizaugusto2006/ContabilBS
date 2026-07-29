@@ -12,15 +12,24 @@ app.secret_key = 'contabilbs_secret_key_2024'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'contabil.db')
+_DB_INITIALIZED = False
 
 def get_db():
+    global _DB_INITIALIZED
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    if not _DB_INITIALIZED:
+        conn.close()
+        create_tables()
+        _DB_INITIALIZED = True
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
-def init_db():
-    conn = get_db()
+def create_tables():
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.executescript('''
         CREATE TABLE IF NOT EXISTS usuarios (
@@ -736,7 +745,7 @@ def editar_usuario(id):
     conn.close()
     return render_template('editar_usuario.html', user=user)
 
-init_db()
-
 if __name__ == '__main__':
+    create_tables()
+    _DB_INITIALIZED = True
     app.run(debug=True, host='0.0.0.0', port=5000)
