@@ -602,7 +602,44 @@ body {
     line-height: 1.3;
 }
 
-.landing-subtitle {
-    color: #888;
-    font-size: 1rem;
+.landing-page {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
+
+.landing-page .landing {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.landing-hamburger {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 100;
+    background: rgba(255,255,255,0.9);
+    border-radius: 8px;
+    padding: 8px 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.landing-nav {
+    position: fixed;
+    top: 60px;
+    right: 15px;
+    z-index: 99;
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    min-width: 200px;
+}
+
+.landing-nav .btn-nav {
+    font-size: 0.9rem;
+}
+ 

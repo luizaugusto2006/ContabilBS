@@ -1,10 +1,51 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="landing">
-    <div class="landing-content">
-        <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo Barrasul Táxi" class="landing-logo">
-        <h1 class="landing-title">Sistema Contábil<br>Barrasul Táxi</h1>
-        <p class="landing-subtitle">Gerencie seus lançamentos financeiros com facilidade</p>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Contábil Barrasul Táxi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>if(!sessionStorage.getItem('bs_auth')){window.location.replace('/logout');}sessionStorage.setItem('bs_auth','1');</script>
+</head>
+<body class="landing-page">
+    <button class="hamburger landing-hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
+    <nav class="nav landing-nav" id="nav-menu">
+        <a href="{{ url_for('lancamentos') }}" class="btn btn-nav">Lançamentos</a>
+        <a href="{{ url_for('relatorio') }}" class="btn btn-nav">Relatórios</a>
+        <a href="{{ url_for('relatorio_saldos') }}" class="btn btn-nav">Saldos</a>
+        <a href="{{ url_for('relatorio_saldos_discriminados') }}" class="btn btn-nav">Saldos Discriminados</a>
+        {% if session.get('admin') %}
+            <a href="{{ url_for('ver_logs') }}" class="btn btn-nav">Logs</a>
+            <a href="{{ url_for('listar_usuarios') }}" class="btn btn-nav">Usuários</a>
+        {% endif %}
+        {% if session.get('admin') %}
+        <a href="{{ url_for('backup') }}" class="btn btn-nav btn-nav-backup">Backup</a>
+        <form method="post" action="{{ url_for('restaurar_backup') }}" enctype="multipart/form-data" class="nav-form">
+            <label class="btn btn-nav btn-nav-restore">
+                Restaurar
+                <input type="file" name="arquivo" accept=".db" hidden onchange="this.form.submit()">
+            </label>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="btn btn-nav btn-nav-logout">Sair</a>
+    </nav>
+    <div class="landing">
+        <div class="landing-content">
+            <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo Barrasul Táxi" class="landing-logo">
+            <h1 class="landing-title">Sistema Contábil<br>Barrasul Táxi</h1>
+        </div>
     </div>
-</div>
-{% endblock %}
+    <script>
+        document.getElementById('hamburger').addEventListener('click', function() {
+            document.getElementById('nav-menu').classList.toggle('nav-open');
+        });
+        document.addEventListener('click', function(e) {
+            var nav = document.getElementById('nav-menu');
+            var ham = document.getElementById('hamburger');
+            if (!nav.contains(e.target) && !ham.contains(e.target)) {
+                nav.classList.remove('nav-open');
+            }
+        });
+    </script>
+</body>
+</html>
