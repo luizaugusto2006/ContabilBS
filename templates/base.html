@@ -11,17 +11,20 @@
 <body>
     <div class="container">
         <header class="header">
-            <div class="logo-area">
-                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo Barrasul Táxi" class="logo">
-                <div>
-                    <h1>Sistema Contábil Barrasul Táxi</h1>
-                    {% if session.get('usuario') %}
-                        <span class="user-greeting">Bem-vindo, {{ session.get('user_nome', session['usuario']) }}</span>
-                    {% endif %}
+            <div class="header-top">
+                <div class="logo-area">
+                    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo Barrasul Táxi" class="logo">
+                    <div>
+                        <h1>Sistema Contábil Barrasul Táxi</h1>
+                        {% if session.get('usuario') %}
+                            <span class="user-greeting">Bem-vindo, {{ session.get('user_nome', session['usuario']) }}</span>
+                        {% endif %}
+                    </div>
                 </div>
+                <button class="hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
             </div>
-            <nav class="nav">
-                <a href="{{ url_for('index') }}" class="btn btn-nav">Lançamentos</a>
+            <nav class="nav" id="nav-menu">
+                <a href="{{ url_for('lancamentos') }}" class="btn btn-nav">Lançamentos</a>
                 <a href="{{ url_for('relatorio') }}" class="btn btn-nav">Relatórios</a>
                 <a href="{{ url_for('relatorio_saldos') }}" class="btn btn-nav">Saldos</a>
                 <a href="{{ url_for('relatorio_saldos_discriminados') }}" class="btn btn-nav">Saldos Discriminados</a>
@@ -70,6 +73,9 @@
             if (txt.startsWith('-')) {
                 td.classList.add('saldo-negativo');
             }
+        });
+        document.getElementById('hamburger').addEventListener('click', function() {
+            document.getElementById('nav-menu').classList.toggle('nav-open');
         });
     </script>
     {% block scripts_extra %}{% endblock %}

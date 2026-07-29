@@ -131,7 +131,7 @@ def admin_required(f):
             return redirect(url_for('login'))
         if not session.get('admin'):
             flash('Acesso restrito ao administrador.', 'danger')
-            return redirect(url_for('index'))
+            return redirect(url_for('lancamentos'))
         return f(*args, **kwargs)
     return decorated
 
@@ -208,7 +208,7 @@ def parse_data_br(data_str):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if session.get('logado'):
-        return redirect(url_for('index'))
+        return redirect(url_for('lancamentos'))
     if request.method == 'POST':
         usuario = request.form.get('usuario', '').strip()
         senha = request.form.get('senha', '').strip()
@@ -225,7 +225,7 @@ def login():
             session['user_nome'] = user['nome']
             session['admin'] = user['admin'] == 1
             registrar_log('entrou', 'Sessão', user['id'], f"Usuário: {user['usuario']} ({user['nome']})")
-            index_url = url_for('index')
+            index_url = url_for('lancamentos')
             return f'''<script>sessionStorage.setItem('bs_auth','1');window.location.replace('{index_url}');</script>'''
         flash('Usuário ou senha inválidos.', 'danger')
     return render_template('login.html')
@@ -250,7 +250,12 @@ def get_mes_aberto():
 
 @app.route('/')
 @login_required
-def index():
+def landing():
+    return render_template('landing.html')
+
+@app.route('/lancamentos')
+@login_required
+def lancamentos():
     conn = get_db()
     cursor = conn.cursor()
 
@@ -326,17 +331,17 @@ def adicionar():
 
     if not descricao:
         flash('Descrição é obrigatória.', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('lancamentos'))
     if tipo not in ('entrada', 'saida'):
         flash('Tipo inválido.', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('lancamentos'))
     try:
         valor = float(valor_str.replace(',', '.'))
         if valor <= 0:
             raise ValueError
     except ValueError:
         flash('Valor inválido.', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('lancamentos'))
 
     data = parse_data_br(data_br)
 
@@ -352,7 +357,7 @@ def adicionar():
     conn.close()
     registrar_log('criou', 'Lançamento', novo_id, f"{descricao} - {tipo} - R$ {valor:.2f}")
     flash('Lançamento adicionado com sucesso!', 'success')
-    return redirect(url_for('index'))
+    return redirect(url_for('lancamentos'))
 
 @app.route('/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -367,7 +372,7 @@ def editar(id):
     if not lancamento:
         conn.close()
         flash('Lançamento não encontrado.', 'danger')
-        return redirect(url_for('index'))
+        return redirect(url_for('lancamentos'))
 
     conn.close()
 
@@ -404,7 +409,7 @@ def editar(id):
         conn.close()
         registrar_log('editou', 'Lançamento', id, f"{descricao} - {tipo} - R$ {valor:.2f}")
         flash('Lançamento atualizado com sucesso!', 'success')
-        return redirect(url_for('index'))
+        return redirect(url_for('lancamentos'))
 
     return render_template('editar.html', lancamento=lancamento)
 
@@ -421,7 +426,7 @@ def excluir(id):
     conn.close()
     registrar_log('excluiu', 'Lançamento', id, desc)
     flash('Lançamento excluído.', 'info')
-    return redirect(url_for('index'))
+    return redirect(url_for('lancamentos'))
 
 @app.route('/categorias', methods=['GET', 'POST'])
 @login_required
@@ -483,7 +488,7 @@ def novo_mes():
     if aberto:
         conn.close()
         flash('Já existe um mês aberto.', 'info')
-        return redirect(url_for('index'))
+        return redirect(url_for('lancamentos'))
     cursor.execute("SELECT mes, ano FROM meses ORDER BY ano DESC, mes DESC LIMIT 1")
     ultimo = cursor.fetchone()
     if ultimo:
@@ -509,7 +514,7 @@ def novo_mes():
     conn.close()
     registrar_log('criou', 'Mês', novo_id, f"Mês {mes:02d}/{ano}")
     flash(f'Novo mês ({mes:02d}/{ano}) iniciado!', 'success')
-    return redirect(url_for('index'))
+    return redirect(url_for('lancamentos'))
 
 @app.route('/relatorio')
 @login_required
