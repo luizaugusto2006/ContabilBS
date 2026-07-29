@@ -701,6 +701,41 @@ def excluir_usuario(id):
     flash('Usuário excluído.', 'info')
     return redirect(url_for('listar_usuarios'))
 
+@app.route('/usuarios/editar/<int:id>', methods=['GET', 'POST'])
+@admin_required
+def editar_usuario(id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM usuarios WHERE id = ?", (id,))
+    user = cursor.fetchone()
+    if not user:
+        conn.close()
+        flash('Usuário não encontrado.', 'danger')
+        return redirect(url_for('listar_usuarios'))
+
+    if request.method == 'POST':
+        nome = request.form.get('nome', '').strip()
+        senha = request.form.get('senha', '').strip()
+        admin = 1 if request.form.get('admin') else 0
+        if senha:
+            cursor.execute(
+                "UPDATE usuarios SET nome = ?, senha = ?, admin = ? WHERE id = ?",
+                (nome, senha, admin, id)
+            )
+        else:
+            cursor.execute(
+                "UPDATE usuarios SET nome = ?, admin = ? WHERE id = ?",
+                (nome, admin, id)
+            )
+        conn.commit()
+        conn.close()
+        registrar_log('editou', 'usuario', id, f"Usuário: {user['usuario']}")
+        flash('Usuário atualizado com sucesso!', 'success')
+        return redirect(url_for('listar_usuarios'))
+
+    conn.close()
+    return render_template('editar_usuario.html', user=user)
+
 init_db()
 
 if __name__ == '__main__':

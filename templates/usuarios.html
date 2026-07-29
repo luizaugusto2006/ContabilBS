@@ -53,13 +53,12 @@
                         {% endif %}
                     </td>
                     <td>{{ u.criado_em }}</td>
-                    <td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('editar_usuario', id=u.id) }}" class="btn btn-small btn-primary">Editar</a>
                         {% if u.id != session.user_id and u.usuario != 'admin' %}
                         <a href="{{ url_for('excluir_usuario', id=u.id) }}"
                            class="btn btn-small btn-danger"
                            onclick="return confirm('Excluir usuário {{ u.usuario }}?')">Excluir</a>
-                        {% else %}
-                            <span class="badge badge-fechado">Ativo</span>
                         {% endif %}
                     </td>
                 </tr>
