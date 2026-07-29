@@ -69,6 +69,10 @@ def init_db():
             data_hora TEXT DEFAULT (datetime('now', 'localtime'))
         );
     ''')
+    try:
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN admin INTEGER DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
     cursor.execute("SELECT COUNT(*) as qtd FROM usuarios")
     if cursor.fetchone()['qtd'] == 0:
         cursor.execute(
