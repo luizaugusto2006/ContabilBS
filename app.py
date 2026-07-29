@@ -4,11 +4,12 @@ import io
 import shutil
 import sqlite3
 from functools import wraps
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, Response
 
 app = Flask(__name__)
 app.secret_key = 'contabilbs_secret_key_2024'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'contabil.db')
 
@@ -211,6 +212,7 @@ def login():
         user = cursor.fetchone()
         conn.close()
         if user:
+            session.permanent = True
             session['logado'] = True
             session['usuario'] = user['usuario']
             session['user_id'] = user['id']
