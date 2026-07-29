@@ -28,6 +28,14 @@
                 {% endif %}
                 <span class="nav-spacer"></span>
                 <a href="{{ url_for('backup') }}" class="btn btn-nav btn-nav-backup" title="Download do banco de dados">Backup</a>
+                {% if session.get('admin') %}
+                <form method="post" action="{{ url_for('restaurar_backup') }}" enctype="multipart/form-data" class="nav-form">
+                    <label class="btn btn-nav btn-nav-restore" title="Restaurar banco de dados">
+                        Restaurar
+                        <input type="file" name="arquivo" accept=".db" hidden onchange="this.form.submit()">
+                    </label>
+                </form>
+                {% endif %}
                 <a href="{{ url_for('logout') }}" class="btn btn-nav btn-nav-logout">Sair</a>
             </nav>
         </header>

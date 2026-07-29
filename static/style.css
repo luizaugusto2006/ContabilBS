@@ -95,6 +95,21 @@ body {
     background: #138496 !important;
 }
 
+.nav .btn-nav-restore {
+    background: #ffc107 !important;
+    color: #333 !important;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.nav .btn-nav-restore:hover {
+    background: #e0a800 !important;
+}
+
+.nav-form {
+    display: inline;
+}
+
 .alert {
     padding: 12px 20px;
     border-radius: 8px;

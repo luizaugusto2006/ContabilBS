@@ -649,6 +649,32 @@ def backup():
         return redirect(url_for('relatorio'))
     return send_file(DB_PATH, as_attachment=True, download_name=f'contabil_backup_{date.today().isoformat()}.db')
 
+@app.route('/restore', methods=['POST'])
+@admin_required
+def restaurar_backup():
+    global _DB_INITIALIZED
+    if 'arquivo' not in request.files:
+        flash('Nenhum arquivo enviado.', 'danger')
+        return redirect(url_for('relatorio'))
+    arquivo = request.files['arquivo']
+    if arquivo.filename == '' or not arquivo.filename.endswith('.db'):
+        flash('Envie um arquivo .db válido.', 'danger')
+        return redirect(url_for('relatorio'))
+    try:
+        db_temp = DB_PATH + '.bak'
+        if os.path.exists(DB_PATH):
+            os.replace(DB_PATH, db_temp)
+        arquivo.save(DB_PATH)
+        if os.path.exists(db_temp):
+            os.remove(db_temp)
+        _DB_INITIALIZED = False
+        flash('Backup restaurado com sucesso!', 'success')
+    except Exception as e:
+        if os.path.exists(db_temp):
+            os.replace(db_temp, DB_PATH)
+        flash(f'Erro ao restaurar backup: {str(e)}', 'danger')
+    return redirect(url_for('relatorio'))
+
 @app.route('/logs')
 @admin_required
 def ver_logs():
