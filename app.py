@@ -454,12 +454,15 @@ def finalizar_mes():
         return redirect(url_for('relatorio'))
     conn = get_db()
     cursor = conn.cursor()
+    cursor.execute("SELECT mes, ano FROM meses WHERE id = ?", (mes_id,))
+    m = cursor.fetchone()
     cursor.execute(
         "UPDATE meses SET fechado = 1, fechado_em = datetime('now', 'localtime') WHERE id = ?",
         (mes_id,)
     )
     conn.commit()
     conn.close()
+    registrar_log('finalizou', 'mes', mes_id, f"Mês {m['mes']:02d}/{m['ano']}")
     flash('Mês finalizado com sucesso!', 'success')
     return redirect(url_for('relatorio'))
 
@@ -495,7 +498,9 @@ def novo_mes():
         (mes, ano)
     )
     conn.commit()
+    novo_id = cursor.lastrowid
     conn.close()
+    registrar_log('criou', 'mes', novo_id, f"Mês {mes:02d}/{ano}")
     flash(f'Novo mês ({mes:02d}/{ano}) iniciado!', 'success')
     return redirect(url_for('index'))
 
@@ -777,6 +782,7 @@ def reabrir_mes(mes_id):
     conn.commit()
     conn.close()
     nome_mes = f"{mes['mes']:02d}/{mes['ano']}"
+    registrar_log('reabriu', 'mes', mes_id, f"Mês {nome_mes}")
     flash(f'Mês {nome_mes} reaberto. Verifique o saldo inicial do próximo mês, se houver.', 'warning')
     return redirect(url_for('detalhes_mes', mes_id=mes_id))
 
@@ -867,6 +873,7 @@ def backup():
     if not os.path.exists(DB_PATH):
         flash('Banco de dados não encontrado.', 'danger')
         return redirect(url_for('relatorio'))
+    registrar_log('exportou', 'backup', 0, 'Download do backup do banco de dados')
     return send_file(DB_PATH, as_attachment=True, download_name=f'contabil_backup_{date.today().isoformat()}.db')
 
 @app.route('/restore', methods=['POST'])
@@ -888,6 +895,7 @@ def restaurar_backup():
         if os.path.exists(db_temp):
             os.remove(db_temp)
         _DB_INITIALIZED = False
+        registrar_log('restaurou', 'backup', 0, f'Backup restaurado de: {arquivo.filename}')
         flash('Backup restaurado com sucesso!', 'success')
     except Exception as e:
         if os.path.exists(db_temp):
