@@ -27,8 +27,8 @@
                     <a href="{{ url_for('listar_usuarios') }}" class="btn btn-nav">Usuários</a>
                 {% endif %}
                 <span class="nav-spacer"></span>
-                <a href="{{ url_for('backup') }}" class="btn btn-nav btn-nav-backup" title="Download do banco de dados">Backup</a>
                 {% if session.get('admin') %}
+                <a href="{{ url_for('backup') }}" class="btn btn-nav btn-nav-backup" title="Download do banco de dados">Backup</a>
                 <form method="post" action="{{ url_for('restaurar_backup') }}" enctype="multipart/form-data" class="nav-form">
                     <label class="btn btn-nav btn-nav-restore" title="Restaurar banco de dados">
                         Restaurar

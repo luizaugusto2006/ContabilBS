@@ -642,7 +642,7 @@ def print_mes(mes_id):
                           saldo=mes['saldo_inicial'] + te - ts)
 
 @app.route('/backup')
-@login_required
+@admin_required
 def backup():
     if not os.path.exists(DB_PATH):
         flash('Banco de dados não encontrado.', 'danger')
