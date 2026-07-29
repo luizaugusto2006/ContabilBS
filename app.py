@@ -795,6 +795,7 @@ def excluir_mes(mes_id):
     cursor.execute("DELETE FROM meses WHERE id = ?", (mes_id,))
     conn.commit()
     conn.close()
+    registrar_log('excluiu', 'mes', mes_id, f"Mês {mes['mes']:02d}/{mes['ano']} e seus lançamentos")
     flash(f'Mês {mes["mes"]:02d}/{mes["ano"]} e seus lançamentos foram excluídos.', 'success')
     return redirect(url_for('relatorio'))
 
