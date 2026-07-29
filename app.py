@@ -574,6 +574,7 @@ def backup():
         return redirect(url_for('relatorio'))
     return send_file(DB_PATH, as_attachment=True, download_name=f'contabil_backup_{date.today().isoformat()}.db')
 
+init_db()
+
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True, host='0.0.0.0', port=5000)
