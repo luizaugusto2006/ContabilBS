@@ -162,22 +162,6 @@ def get_or_create_mes_atual():
         return row['id'], row['saldo_inicial']
 
     saldo_inicial = 0
-    if mes == 1:
-        mes_ant, ano_ant = 12, ano - 1
-    else:
-        mes_ant, ano_ant = mes - 1, ano
-    cursor.execute(
-        "SELECT id, fechado FROM meses WHERE mes = ? AND ano = ?", (mes_ant, ano_ant)
-    )
-    mes_anterior = cursor.fetchone()
-    if mes_anterior and mes_anterior['fechado']:
-        mid = mes_anterior['id']
-        cursor.execute(
-            "SELECT COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) - "
-            "COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) as saldo "
-            "FROM lancamentos WHERE mes_id = ?", (mid,)
-        )
-        saldo_inicial = cursor.fetchone()['saldo']
 
     cursor.execute(
         "INSERT INTO meses (mes, ano, saldo_inicial, aberto_em) VALUES (?, ?, ?, datetime('now', 'localtime'))",
