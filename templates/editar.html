@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="{{ url_for('index') }}">&larr; Voltar</a>
+</div>
+<div class="card form-card">
+    <h3>Editar Lançamento</h3>
+    <form method="POST" class="form-lancamento">
+        <div class="form-group">
+            <label for="descricao">Descrição</label>
+            <input type="text" id="descricao" name="descricao" value="{{ lancamento.descricao }}" required>
+        </div>
+        <div class="form-row-3">
+            <div class="form-group">
+                <label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo" required>
+                    <option value="entrada" {{ 'selected' if lancamento.tipo == 'entrada' }}>Entrada</option>
+                    <option value="saida" {{ 'selected' if lancamento.tipo == 'saida' }}>Saída</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="valor">Valor (R$)</label>
+                <input type="text" id="valor" name="valor" value="{{ '%.2f' | format(lancamento.valor) }}" required>
+            </div>
+            <div class="form-group">
+                <label for="data">Data</label>
+                <input type="text" id="data" name="data" value="{{ lancamento.data | data_br }}" placeholder="dd/mm/aaaa">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="observacao">Observação <span class="opt">(opcional)</span></label>
+            <input type="text" id="observacao" name="observacao" value="{{ lancamento.observacao }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+    </form>
+</div>
+{% endblock %}

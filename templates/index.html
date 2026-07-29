@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mes-info">
+    <h2>{{ mes_atual.mes | mes_nome }} / {{ mes_atual.ano }}</h2>
+</div>
+
+<div class="card form-card">
+    <h3>Novo Lançamento</h3>
+    <form method="POST" action="{{ url_for('adicionar') }}" class="form-lancamento">
+        <div class="form-group">
+            <label for="descricao">Descrição</label>
+            <input type="text" id="descricao" name="descricao" placeholder="Ex: Digite sua conta a cadastrar" required>
+        </div>
+        <div class="form-row-3">
+            <div class="form-group">
+                <label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo" required>
+                    <option value="entrada">Entrada</option>
+                    <option value="saida">Saída</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="valor">Valor (R$)</label>
+                <input type="text" id="valor" name="valor" placeholder="0,00" required>
+            </div>
+            <div class="form-group">
+                <label for="data">Data</label>
+                <input type="text" id="data" name="data" value="{{ today }}" placeholder="dd/mm/aaaa">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="observacao">Observação <span class="opt">(opcional)</span></label>
+            <input type="text" id="observacao" name="observacao" placeholder="Observações adicionais...">
+        </div>
+        <button type="submit" class="btn btn-primary">Adicionar</button>
+    </form>
+</div>
+
+<div class="card table-card">
+    <h3>Todos os Lançamentos</h3>
+    {% if lancamentos %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Mês</th>
+                    <th>Tipo</th>
+                    <th>Valor</th>
+                    <th>Obs.</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in lancamentos %}
+                <tr class="row-{{ l.tipo }}">
+                    <td>{{ l.data | data_br }}</td>
+                    <td>{{ l.descricao }}</td>
+                    <td>{{ l.mes }}/{{ l.ano }}</td>
+                    <td>
+                        {% if l.tipo == 'entrada' %}
+                            <span class="badge badge-entrada">Entrada</span>
+                        {% else %}
+                            <span class="badge badge-saida">Saída</span>
+                        {% endif %}
+                    </td>
+                    <td class="valor">{{ l.valor | brl }}</td>
+                    <td class="obs-cell" title="{{ l.observacao }}">{{ l.observacao[:30] if l.observacao else '' }}</td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('editar', id=l.id) }}" class="btn btn-small btn-primary">Editar</a>
+                        <a href="{{ url_for('excluir', id=l.id) }}" class="btn btn-small btn-danger" onclick="return confirm('Excluir este lançamento?')">Excluir</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="row-total-entrada">
+                    <td colspan="4"><strong>Total Entradas (Geral)</strong></td>
+                    <td class="valor">{{ total_entradas | brl }}</td>
+                    <td colspan="2"></td>
+                </tr>
+                <tr class="row-total-saida">
+                    <td colspan="4"><strong>Total Saídas (Geral)</strong></td>
+                    <td class="valor">{{ total_saidas | brl }}</td>
+                    <td colspan="2"></td>
+                </tr>
+                <tr class="row-saldo">
+                    <td colspan="4"><strong>Saldo Geral</strong></td>
+                    <td class="valor {% if saldo >= 0 %}saldo-positivo{% else %}saldo-negativo{% endif %}">
+                        {{ saldo | brl }}
+                    </td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-msg">Nenhum lançamento registrado.</p>
+    {% endif %}
+</div>
+
+<div class="actions">
+    <form method="POST" action="{{ url_for('finalizar_mes') }}" style="display:inline;">
+        <button type="submit" class="btn btn-warning"
+                onclick="return confirm('Finalizar {{ mes_atual.mes | mes_nome }}/{{ mes_atual.ano }}?')">
+            Finalizar Mês
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Contábil Barrasul Táxi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-area">
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo Barrasul Táxi" class="logo">
+                <div>
+                    <h1>Sistema Contábil Barrasul Táxi</h1>
+                    {% if session.get('usuario') %}
+                        <span class="user-greeting">Bem-vindo, {{ session.get('user_nome', session['usuario']) }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <nav class="nav">
+                <a href="{{ url_for('index') }}" class="btn btn-nav">Lançamentos</a>
+                <a href="{{ url_for('relatorio') }}" class="btn btn-nav">Relatórios</a>
+
+                <span class="nav-spacer"></span>
+                <a href="{{ url_for('backup') }}" class="btn btn-nav btn-nav-backup" title="Download do banco de dados">Backup</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-nav btn-nav-logout">Sair</a>
+            </nav>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <main>{% block content %}{% endblock %}</main>
+
+        <footer class="footer">
+            <p>&copy; {{ now.year }} Barrasul Táxi - Sistema Contábil</p>
+        </footer>
+    </div>
+    <script>
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(a) {
+                a.style.opacity = '0';
+                setTimeout(function() { a.remove(); }, 500);
+            });
+        }, 4000);
+        document.querySelectorAll('.table td.valor, .table td.valor').forEach(function(td) {
+            var txt = td.textContent.trim();
+            if (txt.startsWith('-')) {
+                td.classList.add('saldo-negativo');
+            }
+        });
+    </script>
+    {% block scripts_extra %}{% endblock %}
+</body>
+</html>

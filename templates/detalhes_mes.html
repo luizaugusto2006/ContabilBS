@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('relatorio') }}">&larr; Voltar aos Relatórios</a>
+</nav>
+
+<div class="card">
+    <h2>{{ mes.mes | mes_nome }} {{ mes.ano }}</h2>
+    <div class="mes-status">
+        {% if mes.fechado %}
+            <span class="badge badge-fechado">Fechado em {{ mes.fechado_em }}</span>
+        {% else %}
+            <span class="badge badge-aberto">Aberto</span>
+        {% endif %}
+    </div>
+
+    {% if lancamentos %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Tipo</th>
+                    <th>Valor</th>
+                    <th>Obs.</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in lancamentos %}
+                <tr class="row-{{ l.tipo }}">
+                    <td>{{ l.data }}</td>
+                    <td>{{ l.descricao }}</td>
+                    <td>
+                        {% if l.tipo == 'entrada' %}
+                            <span class="badge badge-entrada">Entrada</span>
+                        {% else %}
+                            <span class="badge badge-saida">Saída</span>
+                        {% endif %}
+                    </td>
+                    <td class="valor">{{ l.valor | brl }}</td>
+                    <td class="obs-cell" title="{{ l.observacao }}">{{ l.observacao[:30] if l.observacao else '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3"><strong>Saldo Inicial</strong></td>
+                    <td class="valor">{{ saldo_inicial | brl }}</td>
+                    <td></td>
+                </tr>
+                <tr class="row-total-entrada">
+                    <td colspan="3"><strong>Total Entradas</strong></td>
+                    <td class="valor">{{ total_entradas | brl }}</td>
+                    <td></td>
+                </tr>
+                <tr class="row-total-saida">
+                    <td colspan="3"><strong>Total Saídas</strong></td>
+                    <td class="valor">{{ total_saidas | brl }}</td>
+                    <td></td>
+                </tr>
+                <tr class="row-saldo">
+                    <td colspan="3"><strong>Saldo Final</strong></td>
+                    <td class="valor {% if saldo >= 0 %}saldo-positivo{% else %}saldo-negativo{% endif %}">
+                        {{ saldo | brl }}
+                    </td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-msg">Nenhum lançamento neste mês.</p>
+    {% endif %}
+
+    <div class="detail-actions">
+        <a href="{{ url_for('exportar_csv', mes_id=mes.id) }}" class="btn btn-success btn-small">Exportar CSV</a>
+        <a href="{{ url_for('print_mes', mes_id=mes.id) }}" target="_blank" class="btn btn-secondary btn-small">Imprimir / PDF</a>
+    </div>
+</div>
+
+{% if mes.fechado %}
+<div class="card actions-card">
+    <h3>Compartilhar Relatório via WhatsApp</h3>
+    {% set texto = "📊 *RESUMO CONTÁBIL BARRASUL TÁXI*%0A" %}
+    {% set texto = texto + "*" + (mes.mes | mes_nome) + " " + (mes.ano | string) + "*%0A%0A" %}
+    {% set texto = texto + "📌 Saldo Inicial: " + (saldo_inicial | brl) + "%0A" %}
+    {% set texto = texto + "✅ Entradas: " + (total_entradas | brl) + "%0A" %}
+    {% set texto = texto + "❌ Saídas: " + (total_saidas | brl) + "%0A" %}
+    {% if saldo >= 0 %}
+        {% set texto = texto + "💰 Saldo Final: " + (saldo | brl) + "%0A" %}
+    {% else %}
+        {% set texto = texto + "🔴 Saldo Final: " + (saldo | brl) + "%0A" %}
+    {% endif %}
+    {% set texto = texto + "%0A📋 *Lançamentos:*%0A" %}
+    {% for l in lancamentos %}
+        {% set s = "+" if l.tipo == 'entrada' else "-" %}
+        {% set texto = texto + "  " + s + " " + l.descricao + ": " + (l.valor | brl) + "%0A" %}
+    {% endfor %}
+    {% set texto = texto + "%0AEnviado pelo Sistema Contábil Barrasul Táxi" %}
+    {% set whatsapp_url = "https://wa.me/?text=" + texto %}
+
+    <a href="{{ whatsapp_url }}" target="_blank" class="btn btn-success btn-whatsapp">
+        Enviar para WhatsApp
+    </a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="card">
+    <h2>Relatório Mensal</h2>
+    {% if dados_meses %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Mês</th>
+                    <th>Status</th>
+                    <th>Saldo Inicial</th>
+                    <th>Entradas</th>
+                    <th>Saídas</th>
+                    <th>Saldo Final</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in dados_meses %}
+                <tr>
+                    <td><strong>{{ m.mes | mes_nome }} {{ m.ano }}</strong></td>
+                    <td>
+                        {% if m.fechado %}
+                            <span class="badge badge-fechado">Fechado</span>
+                        {% else %}
+                            <span class="badge badge-aberto">Aberto</span>
+                        {% endif %}
+                    </td>
+                    <td class="valor">{{ m.saldo_inicial | brl }}</td>
+                    <td class="valor">{{ m.total_entradas | brl }}</td>
+                    <td class="valor">{{ m.total_saidas | brl }}</td>
+                    <td class="valor {% if m.saldo >= 0 %}saldo-positivo{% else %}saldo-negativo{% endif %}">
+                        {{ m.saldo | brl }}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('detalhes_mes', mes_id=m.id) }}" class="btn btn-small btn-primary">Detalhes</a>
+                        {% if m.fechado %}
+                            <a href="{{ url_for('exportar_csv', mes_id=m.id) }}" class="btn btn-small btn-success">CSV</a>
+                            <a href="{{ url_for('print_mes', mes_id=m.id) }}" target="_blank" class="btn btn-small btn-secondary">PDF</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="row-total-entrada">
+                    <td><strong>Total Geral</strong></td>
+                    <td></td>
+                    <td></td>
+                    <td class="valor">{{ total_geral_entradas | brl }}</td>
+                    <td class="valor">{{ total_geral_saidas | brl }}</td>
+                    <td class="valor {% if saldo_geral >= 0 %}saldo-positivo{% else %}saldo-negativo{% endif %}">
+                        {{ saldo_geral | brl }}
+                    </td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="chart-container">
+        <h3>Evolução Mensal</h3>
+        <canvas id="graficoMensal"></canvas>
+    </div>
+    {% else %}
+    <p class="empty-msg">Nenhum mês registrado ainda.</p>
+    {% endif %}
+</div>
+
+{% if tem_mes_aberto == False %}
+<div class="actions">
+    <a href="{{ url_for('novo_mes') }}" class="btn btn-primary">Iniciar Novo Mês</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+fetch('{{ url_for("dados_grafico") }}')
+    .then(r => r.json())
+    .then(d => {
+        new Chart(document.getElementById('graficoMensal'), {
+            type: 'bar',
+            data: {
+                labels: d.labels,
+                datasets: [{
+                    label: 'Entradas',
+                    data: d.entradas,
+                    backgroundColor: '#28a745',
+                    borderRadius: 4
+                }, {
+                    label: 'Saídas',
+                    data: d.saidas,
+                    backgroundColor: '#dc3545',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: function(v) { return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2}); } }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

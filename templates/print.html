@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ mes.mes | mes_nome }} {{ mes.ano }} - Barrasul Táxi</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #222; }
+        h1 { font-size: 1.6rem; margin-bottom: 5px; }
+        .subtitle { color: #666; margin-bottom: 25px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { background: #f0f0f0; padding: 10px 12px; text-align: left; border: 1px solid #ccc; font-size: 0.85rem; }
+        td { padding: 8px 12px; border: 1px solid #ddd; }
+        .valor { text-align: right; font-family: 'Courier New', monospace; font-weight: 600; }
+        .row-entrada td { border-left: 3px solid #28a745; }
+        .row-saida td { border-left: 3px solid #dc3545; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; }
+        .badge-entrada { background: #e8f5e9; color: #28a745; }
+        .badge-saida { background: #fbe9e7; color: #dc3545; }
+        .totals { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+        .totals p { margin: 5px 0; font-size: 1rem; }
+        .positivo { color: #28a745; }
+        .negativo { color: #dc3545; }
+        .footer { margin-top: 30px; text-align: center; color: #999; font-size: 0.8rem; }
+        .obs-cell { max-width: 150px; font-size: 0.8rem; color: #555; }
+        @media print {
+            body { padding: 20px; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Sistema Contábil Barrasul Táxi</h1>
+    <p class="subtitle"><strong>{{ mes.mes | mes_nome }} {{ mes.ano }}</strong>
+       {% if mes.fechado %} — Fechado em {{ mes.fechado_em }}{% endif %}</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Tipo</th>
+                <th>Valor</th>
+                <th>Obs.</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for l in lancamentos %}
+            <tr class="row-{{ l.tipo }}">
+                <td>{{ l.data }}</td>
+                <td>{{ l.descricao }}</td>
+                <td>
+                    {% if l.tipo == 'entrada' %}
+                        <span class="badge badge-entrada">Entrada</span>
+                    {% else %}
+                        <span class="badge badge-saida">Saída</span>
+                    {% endif %}
+                </td>
+                <td class="valor">{{ l.valor | brl }}</td>
+                <td class="obs-cell">{{ l.observacao or '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <p>Saldo Inicial: <strong>{{ saldo_inicial | brl }}</strong></p>
+        <p>Total Entradas: <strong>{{ total_entradas | brl }}</strong></p>
+        <p>Total Saídas: <strong>{{ total_saidas | brl }}</strong></p>
+        <p style="font-size:1.2rem;">Saldo Final: <strong class="{% if saldo >= 0 %}positivo{% else %}negativo{% endif %}">{{ saldo | brl }}</strong></p>
+    </div>
+
+    <div class="footer">
+        <p>Relatório gerado em {{ now.strftime('%d/%m/%Y %H:%M') }} — Barrasul Táxi</p>
+    </div>
+
+    <script>window.print();</script>
+</body>
+</html>
