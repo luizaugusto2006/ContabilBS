@@ -780,6 +780,24 @@ def reabrir_mes(mes_id):
     flash(f'Mês {nome_mes} reaberto. Verifique o saldo inicial do próximo mês, se houver.', 'warning')
     return redirect(url_for('detalhes_mes', mes_id=mes_id))
 
+@app.route('/excluir-mes/<int:mes_id>')
+@admin_required
+def excluir_mes(mes_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT mes, ano FROM meses WHERE id = ?", (mes_id,))
+    mes = cursor.fetchone()
+    if not mes:
+        conn.close()
+        flash('Mês não encontrado.', 'danger')
+        return redirect(url_for('relatorio'))
+    cursor.execute("DELETE FROM lancamentos WHERE mes_id = ?", (mes_id,))
+    cursor.execute("DELETE FROM meses WHERE id = ?", (mes_id,))
+    conn.commit()
+    conn.close()
+    flash(f'Mês {mes["mes"]:02d}/{mes["ano"]} e seus lançamentos foram excluídos.', 'success')
+    return redirect(url_for('relatorio'))
+
 @app.route('/exportar-csv/<int:mes_id>')
 @login_required
 def exportar_csv(mes_id):

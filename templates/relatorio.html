@@ -42,6 +42,9 @@
                             <a href="{{ url_for('exportar_csv', mes_id=m.id) }}" class="btn btn-small btn-success">CSV</a>
                             <a href="{{ url_for('print_mes', mes_id=m.id) }}" target="_blank" class="btn btn-small btn-secondary">PDF</a>
                         {% endif %}
+                        {% if session.get('admin') %}
+                            <a href="{{ url_for('excluir_mes', mes_id=m.id) }}" class="btn btn-small btn-danger" onclick="return confirm('Excluir {{ m.mes | mes_nome }} {{ m.ano }} e todos os seus lançamentos?')">Excluir</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
