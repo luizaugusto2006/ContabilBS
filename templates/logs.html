@@ -1,7 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card">
-    <h2>Logs de Auditoria</h2>
+    <div class="card-header">
+        <h2>Logs de Auditoria</h2>
+        {% if logs %}
+        <form method="post" action="{{ url_for('limpar_logs') }}" onsubmit="return confirm('Excluir todos os logs? Esta ação não pode ser desfeita.')">
+            <button type="submit" class="btn btn-danger btn-small">Limpar Logs</button>
+        </form>
+        {% endif %}
+    </div>
     {% if logs %}
     <div class="table-wrapper">
         <table class="table">

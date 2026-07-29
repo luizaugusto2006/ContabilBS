@@ -682,6 +682,17 @@ def ver_logs():
     conn.close()
     return render_template('logs.html', logs=logs)
 
+@app.route('/logs/limpar', methods=['POST'])
+@admin_required
+def limpar_logs():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM auditoria")
+    conn.commit()
+    conn.close()
+    flash('Todos os logs foram excluídos.', 'success')
+    return redirect(url_for('ver_logs'))
+
 @app.route('/usuarios')
 @admin_required
 def listar_usuarios():
