@@ -576,6 +576,28 @@ def detalhes_mes(mes_id):
                          total_entradas=total_entradas, total_saidas=total_saidas,
                          saldo_inicial=mes['saldo_inicial'], saldo=saldo)
 
+@app.route('/reabrir-mes/<int:mes_id>', methods=['POST'])
+@login_required
+def reabrir_mes(mes_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM meses WHERE id = ?", (mes_id,))
+    mes = cursor.fetchone()
+    if not mes:
+        conn.close()
+        flash('Mês não encontrado.', 'danger')
+        return redirect(url_for('relatorio'))
+    if not mes['fechado']:
+        conn.close()
+        flash('Mês já está aberto.', 'warning')
+        return redirect(url_for('detalhes_mes', mes_id=mes_id))
+    cursor.execute("UPDATE meses SET fechado = 0, fechado_em = NULL WHERE id = ?", (mes_id,))
+    conn.commit()
+    conn.close()
+    nome_mes = f"{mes['mes']:02d}/{mes['ano']}"
+    flash(f'Mês {nome_mes} reaberto. Verifique o saldo inicial do próximo mês, se houver.', 'warning')
+    return redirect(url_for('detalhes_mes', mes_id=mes_id))
+
 @app.route('/exportar-csv/<int:mes_id>')
 @login_required
 def exportar_csv(mes_id):

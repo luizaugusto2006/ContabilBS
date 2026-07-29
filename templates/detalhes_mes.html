@@ -9,6 +9,9 @@
     <div class="mes-status">
         {% if mes.fechado %}
             <span class="badge badge-fechado">Fechado em {{ mes.fechado_em }}</span>
+            <form method="post" action="{{ url_for('reabrir_mes', mes_id=mes.id) }}" style="display:inline" onsubmit="return confirm('Reabrir este mês? Ele poderá receber novos lançamentos.')">
+                <button type="submit" class="btn btn-warning btn-small">Reabrir</button>
+            </form>
         {% else %}
             <span class="badge badge-aberto">Aberto</span>
         {% endif %}
