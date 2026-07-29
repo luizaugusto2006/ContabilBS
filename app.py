@@ -30,6 +30,7 @@ def get_db():
 
 def create_tables():
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.executescript('''
         CREATE TABLE IF NOT EXISTS usuarios (
