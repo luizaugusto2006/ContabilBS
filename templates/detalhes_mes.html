@@ -27,6 +27,7 @@
                     <th>Tipo</th>
                     <th>Valor</th>
                     <th>Obs.</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -43,6 +44,10 @@
                     </td>
                     <td class="valor">{{ l.valor | brl }}</td>
                     <td class="obs-cell" title="{{ l.observacao }}">{{ l.observacao[:30] if l.observacao else '' }}</td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('editar', id=l.id) }}" class="btn btn-small btn-primary" title="Editar">✎</a>
+                        <a href="{{ url_for('excluir', id=l.id) }}" class="btn btn-small btn-danger" onclick="return confirm('Excluir este lançamento?')" title="Excluir">✕</a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -51,15 +56,18 @@
                     <td colspan="3"><strong>Saldo Inicial</strong></td>
                     <td class="valor">{{ saldo_inicial | brl }}</td>
                     <td></td>
+                    <td></td>
                 </tr>
                 <tr class="row-total-entrada">
                     <td colspan="3"><strong>Total Entradas</strong></td>
                     <td class="valor">{{ total_entradas | brl }}</td>
                     <td></td>
+                    <td></td>
                 </tr>
                 <tr class="row-total-saida">
                     <td colspan="3"><strong>Total Saídas</strong></td>
                     <td class="valor">{{ total_saidas | brl }}</td>
+                    <td></td>
                     <td></td>
                 </tr>
                 <tr class="row-saldo">
@@ -67,6 +75,7 @@
                     <td class="valor {% if saldo >= 0 %}saldo-positivo{% else %}saldo-negativo{% endif %}">
                         {{ saldo | brl }}
                     </td>
+                    <td></td>
                     <td></td>
                 </tr>
             </tfoot>
