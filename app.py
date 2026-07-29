@@ -27,6 +27,7 @@ def init_db():
             usuario TEXT NOT NULL UNIQUE,
             senha TEXT NOT NULL,
             nome TEXT DEFAULT '',
+            admin INTEGER DEFAULT 0,
             criado_em TEXT DEFAULT (datetime('now', 'localtime'))
         );
         CREATE TABLE IF NOT EXISTS categorias (
@@ -57,13 +58,25 @@ def init_db():
             FOREIGN KEY (mes_id) REFERENCES meses(id),
             FOREIGN KEY (categoria_id) REFERENCES categorias(id)
         );
+        CREATE TABLE IF NOT EXISTS auditoria (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            usuario_nome TEXT,
+            acao TEXT NOT NULL,
+            entidade TEXT NOT NULL,
+            entidade_id INTEGER,
+            descricao TEXT,
+            data_hora TEXT DEFAULT (datetime('now', 'localtime'))
+        );
     ''')
     cursor.execute("SELECT COUNT(*) as qtd FROM usuarios")
     if cursor.fetchone()['qtd'] == 0:
         cursor.execute(
-            "INSERT INTO usuarios (usuario, senha, nome) VALUES (?, ?, ?)",
+            "INSERT INTO usuarios (usuario, senha, nome, admin) VALUES (?, ?, ?, 1)",
             ('admin', '123456', 'Administrador')
         )
+    else:
+        cursor.execute("UPDATE usuarios SET admin = 1 WHERE usuario = 'admin'")
     cursor.execute("SELECT COUNT(*) as qtd FROM categorias")
     if cursor.fetchone()['qtd'] == 0:
         categorias = [
@@ -83,6 +96,28 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('logado'):
+            return redirect(url_for('login'))
+        if not session.get('admin'):
+            flash('Acesso restrito ao administrador.', 'danger')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated
+
+def registrar_log(acao, entidade, entidade_id, descricao=''):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO auditoria (usuario_id, usuario_nome, acao, entidade, entidade_id, descricao) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (session.get('user_id'), session.get('usuario'), acao, entidade, entidade_id, descricao)
+    )
+    conn.commit()
+    conn.close()
 
 @app.context_processor
 def inject_now():
@@ -176,6 +211,7 @@ def login():
             session['usuario'] = user['usuario']
             session['user_id'] = user['id']
             session['user_nome'] = user['nome']
+            session['admin'] = user['admin'] == 1
             flash('Login realizado com sucesso!', 'success')
             return redirect(url_for('index'))
         flash('Usuário ou senha inválidos.', 'danger')
@@ -283,7 +319,9 @@ def adicionar():
         (mes_id, descricao, tipo, valor, data, observacao)
     )
     conn.commit()
+    novo_id = cursor.lastrowid
     conn.close()
+    registrar_log('criou', 'lancamento', novo_id, f"{descricao} - {tipo} - R$ {valor:.2f}")
     flash('Lançamento adicionado com sucesso!', 'success')
     return redirect(url_for('index'))
 
@@ -337,6 +375,7 @@ def editar(id):
         )
         conn.commit()
         conn.close()
+        registrar_log('editou', 'lancamento', id, f"{descricao} - {tipo} - R$ {valor:.2f}")
         flash('Lançamento atualizado com sucesso!', 'success')
         return redirect(url_for('index'))
 
@@ -347,9 +386,13 @@ def editar(id):
 def excluir(id):
     conn = get_db()
     cursor = conn.cursor()
+    cursor.execute("SELECT descricao, tipo, valor FROM lancamentos WHERE id = ?", (id,))
+    item = cursor.fetchone()
+    desc = f"{item['descricao']} - {item['tipo']} - R$ {item['valor']:.2f}" if item else ''
     cursor.execute("DELETE FROM lancamentos WHERE id = ?", (id,))
     conn.commit()
     conn.close()
+    registrar_log('excluiu', 'lancamento', id, desc)
     flash('Lançamento excluído.', 'info')
     return redirect(url_for('index'))
 
@@ -573,6 +616,76 @@ def backup():
         flash('Banco de dados não encontrado.', 'danger')
         return redirect(url_for('relatorio'))
     return send_file(DB_PATH, as_attachment=True, download_name=f'contabil_backup_{date.today().isoformat()}.db')
+
+@app.route('/logs')
+@admin_required
+def ver_logs():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM auditoria ORDER BY data_hora DESC LIMIT 500")
+    logs = cursor.fetchall()
+    conn.close()
+    return render_template('logs.html', logs=logs)
+
+@app.route('/usuarios')
+@admin_required
+def listar_usuarios():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM usuarios ORDER BY admin DESC, usuario")
+    usuarios = cursor.fetchall()
+    conn.close()
+    return render_template('usuarios.html', usuarios=usuarios)
+
+@app.route('/usuarios/adicionar', methods=['POST'])
+@admin_required
+def adicionar_usuario():
+    usuario = request.form.get('usuario', '').strip()
+    senha = request.form.get('senha', '').strip()
+    nome = request.form.get('nome', '').strip()
+    admin = 1 if request.form.get('admin') else 0
+    if not usuario or not senha:
+        flash('Usuário e senha são obrigatórios.', 'danger')
+        return redirect(url_for('listar_usuarios'))
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO usuarios (usuario, senha, nome, admin) VALUES (?, ?, ?, ?)",
+            (usuario, senha, nome, admin)
+        )
+        conn.commit()
+        registrar_log('criou', 'usuario', cursor.lastrowid, f"Usuário: {usuario}")
+        flash('Usuário cadastrado com sucesso!', 'success')
+    except sqlite3.IntegrityError:
+        flash('Usuário já existe.', 'danger')
+    conn.close()
+    return redirect(url_for('listar_usuarios'))
+
+@app.route('/usuarios/excluir/<int:id>')
+@admin_required
+def excluir_usuario(id):
+    if id == session.get('user_id'):
+        flash('Você não pode excluir seu próprio usuário.', 'danger')
+        return redirect(url_for('listar_usuarios'))
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT usuario FROM usuarios WHERE id = ?", (id,))
+    user = cursor.fetchone()
+    if not user:
+        flash('Usuário não encontrado.', 'danger')
+        conn.close()
+        return redirect(url_for('listar_usuarios'))
+    if user['usuario'] == 'admin':
+        flash('Não é possível excluir o administrador padrão.', 'danger')
+        conn.close()
+        return redirect(url_for('listar_usuarios'))
+    cursor.execute("DELETE FROM usuarios WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    registrar_log('excluiu', 'usuario', id, f"Usuário: {user['usuario']}")
+    flash('Usuário excluído.', 'info')
+    return redirect(url_for('listar_usuarios'))
 
 init_db()
 

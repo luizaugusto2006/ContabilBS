@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card form-card">
+    <h3>Novo Usuário</h3>
+    <form method="POST" action="{{ url_for('adicionar_usuario') }}" class="form-lancamento">
+        <div class="form-row-4">
+            <div class="form-group">
+                <label for="usuario">Usuário</label>
+                <input type="text" id="usuario" name="usuario" placeholder="Nome de login" required>
+            </div>
+            <div class="form-group">
+                <label for="senha">Senha</label>
+                <input type="text" id="senha" name="senha" placeholder="Senha" required>
+            </div>
+            <div class="form-group">
+                <label for="nome">Nome completo</label>
+                <input type="text" id="nome" name="nome" placeholder="Nome do usuário">
+            </div>
+            <div class="form-group" style="align-self:flex-end;">
+                <label>
+                    <input type="checkbox" name="admin" value="1"> Administrador
+                </label>
+                <button type="submit" class="btn btn-primary" style="margin-top:8px;">Adicionar</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h3>Usuários Cadastrados</h3>
+    {% if usuarios %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Usuário</th>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>Criado em</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <td><strong>{{ u.usuario }}</strong></td>
+                    <td>{{ u.nome or '-' }}</td>
+                    <td>
+                        {% if u.admin %}
+                            <span class="badge badge-fechado">Admin</span>
+                        {% else %}
+                            <span class="badge badge-aberto">Usuário</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ u.criado_em }}</td>
+                    <td>
+                        {% if u.id != session.user_id and u.usuario != 'admin' %}
+                        <a href="{{ url_for('excluir_usuario', id=u.id) }}"
+                           class="btn btn-small btn-danger"
+                           onclick="return confirm('Excluir usuário {{ u.usuario }}?')">Excluir</a>
+                        {% else %}
+                            <span class="badge badge-fechado">Ativo</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-msg">Nenhum usuário cadastrado.</p>
+    {% endif %}
+</div>
+{% endblock %}

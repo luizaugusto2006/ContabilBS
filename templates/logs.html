@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Logs de Auditoria</h2>
+    {% if logs %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Usuário</th>
+                    <th>Ação</th>
+                    <th>Entidade</th>
+                    <th>Descrição</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.data_hora }}</td>
+                    <td>{{ log.usuario_nome }}</td>
+                    <td>
+                        {% if log.acao == 'criou' %}
+                            <span class="badge badge-entrada">Criou</span>
+                        {% elif log.acao == 'editou' %}
+                            <span class="badge badge-aberto">Editou</span>
+                        {% elif log.acao == 'excluiu' %}
+                            <span class="badge badge-saida">Excluiu</span>
+                        {% else %}
+                            {{ log.acao }}
+                        {% endif %}
+                    </td>
+                    <td>{{ log.entidade }} #{{ log.entidade_id }}</td>
+                    <td>{{ log.descricao }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-msg">Nenhum registro de auditoria.</p>
+    {% endif %}
+</div>
+{% endblock %}
