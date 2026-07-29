@@ -131,7 +131,7 @@ def admin_required(f):
             return redirect(url_for('login'))
         if not session.get('admin'):
             flash('Acesso restrito ao administrador.', 'danger')
-            return redirect(url_for('lancamentos'))
+            return redirect(url_for('landing'))
         return f(*args, **kwargs)
     return decorated
 
@@ -208,7 +208,7 @@ def parse_data_br(data_str):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if session.get('logado'):
-        return redirect(url_for('lancamentos'))
+        return redirect(url_for('landing'))
     if request.method == 'POST':
         usuario = request.form.get('usuario', '').strip()
         senha = request.form.get('senha', '').strip()
@@ -225,7 +225,7 @@ def login():
             session['user_nome'] = user['nome']
             session['admin'] = user['admin'] == 1
             registrar_log('entrou', 'Sessão', user['id'], f"Usuário: {user['usuario']} ({user['nome']})")
-            index_url = url_for('lancamentos')
+            index_url = url_for('landing')
             return f'''<script>sessionStorage.setItem('bs_auth','1');window.location.replace('{index_url}');</script>'''
         flash('Usuário ou senha inválidos.', 'danger')
     return render_template('login.html')
