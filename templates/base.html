@@ -75,8 +75,16 @@
                 td.classList.add('saldo-negativo');
             }
         });
-        document.getElementById('hamburger').addEventListener('click', function() {
+        document.getElementById('hamburger').addEventListener('click', function(e) {
+            e.stopPropagation();
             document.getElementById('nav-menu').classList.toggle('nav-open');
+        });
+        document.addEventListener('click', function(e) {
+            var nav = document.getElementById('nav-menu');
+            var ham = document.getElementById('hamburger');
+            if (!nav.contains(e.target) && !ham.contains(e.target)) {
+                nav.classList.remove('nav-open');
+            }
         });
     </script>
     {% block scripts_extra %}{% endblock %}
