@@ -1,14 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card">
-    <div class="card-header">
-        <h2>Logs de Auditoria</h2>
-        {% if logs %}
-        <form method="post" action="{{ url_for('limpar_logs') }}" onsubmit="return confirm('Excluir todos os logs? Esta ação não pode ser desfeita.')">
-            <button type="submit" class="btn btn-danger btn-small">Limpar Logs</button>
-        </form>
-        {% endif %}
-    </div>
+    <h2>Logs de Auditoria</h2>
     {% if logs %}
     <div class="table-wrapper">
         <table class="table">
@@ -19,6 +12,7 @@
                     <th>Ação</th>
                     <th>Entidade</th>
                     <th>Descrição</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -39,6 +33,11 @@
                     </td>
                     <td>{{ log.entidade }} #{{ log.entidade_id }}</td>
                     <td>{{ log.descricao }}</td>
+                    <td>
+                        <form method="post" action="{{ url_for('excluir_log', log_id=log.id) }}" onsubmit="return confirm('Excluir este log?')">
+                            <button type="submit" class="btn btn-danger btn-small" title="Excluir">&times;</button>
+                        </form>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

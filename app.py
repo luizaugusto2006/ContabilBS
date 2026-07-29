@@ -226,7 +226,7 @@ def login():
         senha = request.form.get('senha', '').strip()
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM usuarios WHERE usuario = ? AND senha = ?", (usuario, senha))
+        cursor.execute("SELECT * FROM usuarios WHERE LOWER(usuario) = LOWER(?) AND senha = ?", (usuario, senha))
         user = cursor.fetchone()
         conn.close()
         if user:
@@ -682,15 +682,15 @@ def ver_logs():
     conn.close()
     return render_template('logs.html', logs=logs)
 
-@app.route('/logs/limpar', methods=['POST'])
+@app.route('/logs/excluir/<int:log_id>', methods=['POST'])
 @admin_required
-def limpar_logs():
+def excluir_log(log_id):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM auditoria")
+    cursor.execute("DELETE FROM auditoria WHERE id = ?", (log_id,))
     conn.commit()
     conn.close()
-    flash('Todos os logs foram excluídos.', 'success')
+    flash('Log excluído.', 'success')
     return redirect(url_for('ver_logs'))
 
 @app.route('/usuarios')
