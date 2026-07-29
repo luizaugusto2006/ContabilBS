@@ -355,7 +355,7 @@ def editar(id):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT l.*, c.nome as categoria_nome FROM lancamentos l LEFT JOIN categorias c ON l.categoria_id = c.id WHERE l.id = ?",
+        "SELECT * FROM lancamentos WHERE id = ?",
         (id,)
     )
     lancamento = cursor.fetchone()
@@ -364,8 +364,6 @@ def editar(id):
         flash('Lançamento não encontrado.', 'danger')
         return redirect(url_for('index'))
 
-    cursor.execute("SELECT * FROM categorias ORDER BY tipo, nome")
-    categorias = cursor.fetchall()
     conn.close()
 
     if request.method == 'POST':
@@ -403,7 +401,7 @@ def editar(id):
         flash('Lançamento atualizado com sucesso!', 'success')
         return redirect(url_for('index'))
 
-    return render_template('editar.html', lancamento=lancamento, categorias=categorias)
+    return render_template('editar.html', lancamento=lancamento)
 
 @app.route('/excluir/<int:id>')
 @login_required
@@ -559,7 +557,7 @@ def detalhes_mes(mes_id):
         flash('Mês não encontrado.', 'danger')
         return redirect(url_for('relatorio'))
     cursor.execute(
-        "SELECT l.*, c.nome as categoria_nome FROM lancamentos l LEFT JOIN categorias c ON l.categoria_id = c.id WHERE l.mes_id = ? ORDER BY l.data DESC, l.id DESC",
+        "SELECT * FROM lancamentos WHERE mes_id = ? ORDER BY data DESC, id DESC",
         (mes_id,)
     )
     lancamentos = cursor.fetchall()
@@ -590,8 +588,8 @@ def exportar_csv(mes_id):
         flash('Mês não encontrado.', 'danger')
         return redirect(url_for('relatorio'))
     cursor.execute(
-        "SELECT l.data, l.descricao, l.tipo, l.valor, c.nome as categoria, l.observacao "
-        "FROM lancamentos l LEFT JOIN categorias c ON l.categoria_id = c.id WHERE l.mes_id = ? ORDER BY l.data",
+        "SELECT l.data, l.descricao, l.tipo, l.valor, l.observacao "
+        "FROM lancamentos l WHERE l.mes_id = ? ORDER BY l.data",
         (mes_id,)
     )
     lancamentos = cursor.fetchall()
@@ -599,11 +597,11 @@ def exportar_csv(mes_id):
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['Data', 'Descrição', 'Tipo', 'Valor', 'Categoria', 'Observação'])
+    writer.writerow(['Data', 'Descrição', 'Tipo', 'Valor', 'Observação'])
     for l in lancamentos:
         writer.writerow([l['data'], l['descricao'],
                         'Entrada' if l['tipo'] == 'entrada' else 'Saída',
-                        f"{l['valor']:.2f}", l['categoria'] or '', l['observacao'] or ''])
+                        f"{l['valor']:.2f}", l['observacao'] or ''])
 
     nome_mes = f"{lancamentos[0]['data'][:7]}" if lancamentos else f"{mes['mes']:02d}{mes['ano']}"
     return Response(
@@ -624,8 +622,7 @@ def print_mes(mes_id):
         flash('Mês não encontrado.', 'danger')
         return redirect(url_for('relatorio'))
     cursor.execute(
-        "SELECT l.*, c.nome as categoria_nome FROM lancamentos l LEFT JOIN categorias c ON l.categoria_id = c.id "
-        "WHERE l.mes_id = ? ORDER BY l.data DESC, l.id DESC", (mes_id,)
+        "SELECT * FROM lancamentos WHERE mes_id = ? ORDER BY data DESC, id DESC", (mes_id,)
     )
     lancamentos = cursor.fetchall()
     cursor.execute(
