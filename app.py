@@ -231,17 +231,29 @@ def logout():
     flash('Você saiu do sistema.', 'info')
     return redirect(url_for('login'))
 
+def get_mes_aberto():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, mes, ano, saldo_inicial FROM meses WHERE fechado = 0 ORDER BY ano, mes LIMIT 1")
+    mes = cursor.fetchone()
+    conn.close()
+    if mes:
+        return mes['id'], mes['saldo_inicial']
+    return None, None
+
 @app.route('/')
 @login_required
 def index():
     conn = get_db()
     cursor = conn.cursor()
 
-    mes_id, saldo_inicial = get_or_create_mes_atual()
+    mes_id, saldo_inicial = get_mes_aberto()
     if mes_id is None:
-        conn.close()
-        flash('Mês atual já está fechado. Inicie um novo mês.', 'warning')
-        return redirect(url_for('relatorio'))
+        mes_id, saldo_inicial = get_or_create_mes_atual()
+        if mes_id is None:
+            conn.close()
+            flash('Mês atual já está fechado. Inicie um novo mês.', 'warning')
+            return redirect(url_for('relatorio'))
 
     cursor.execute("SELECT mes, ano FROM meses WHERE id = ?", (mes_id,))
     mes_atual = cursor.fetchone()
@@ -292,10 +304,12 @@ def index():
 @app.route('/adicionar', methods=['POST'])
 @login_required
 def adicionar():
-    mes_id, _ = get_or_create_mes_atual()
+    mes_id, _ = get_mes_aberto()
     if mes_id is None:
-        flash('Mês atual está fechado. Inicie um novo mês.', 'warning')
-        return redirect(url_for('relatorio'))
+        mes_id, _ = get_or_create_mes_atual()
+        if mes_id is None:
+            flash('Não há mês aberto. Inicie um novo mês.', 'warning')
+            return redirect(url_for('relatorio'))
 
     descricao = request.form.get('descricao', '').strip()
     tipo = request.form.get('tipo')
@@ -434,7 +448,7 @@ def gerenciar_categorias():
 @app.route('/finalizar-mes', methods=['POST'])
 @login_required
 def finalizar_mes():
-    mes_id, _ = get_or_create_mes_atual()
+    mes_id, _ = get_mes_aberto()
     if mes_id is None:
         flash('Não há mês aberto para finalizar.', 'warning')
         return redirect(url_for('relatorio'))
@@ -452,12 +466,37 @@ def finalizar_mes():
 @app.route('/novo-mes')
 @login_required
 def novo_mes():
-    mes_id, _ = get_or_create_mes_atual()
-    if mes_id is not None:
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT mes, ano, fechado FROM meses WHERE fechado = 0 LIMIT 1")
+    aberto = cursor.fetchone()
+    if aberto:
+        conn.close()
         flash('Já existe um mês aberto.', 'info')
         return redirect(url_for('index'))
-    novo_id, _ = get_or_create_mes_atual()
-    flash('Novo mês iniciado!', 'success')
+    cursor.execute("SELECT mes, ano FROM meses ORDER BY ano DESC, mes DESC LIMIT 1")
+    ultimo = cursor.fetchone()
+    if ultimo:
+        mes, ano = ultimo['mes'], ultimo['ano']
+        if mes == 12:
+            mes, ano = 1, ano + 1
+        else:
+            mes += 1
+        cursor.execute("SELECT id FROM meses WHERE mes = ? AND ano = ?", (mes, ano))
+        if cursor.fetchone():
+            conn.close()
+            flash(f'Mês {mes:02d}/{ano} já existe e está fechado.', 'warning')
+            return redirect(url_for('relatorio'))
+    else:
+        hoje = date.today()
+        mes, ano = hoje.month, hoje.year
+    cursor.execute(
+        "INSERT INTO meses (mes, ano, saldo_inicial, aberto_em) VALUES (?, ?, 0, datetime('now', 'localtime'))",
+        (mes, ano)
+    )
+    conn.commit()
+    conn.close()
+    flash(f'Novo mês ({mes:02d}/{ano}) iniciado!', 'success')
     return redirect(url_for('index'))
 
 @app.route('/relatorio')
