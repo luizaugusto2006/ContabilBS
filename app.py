@@ -99,6 +99,14 @@ def login_required(f):
     def decorated(*args, **kwargs):
         if not session.get('logado'):
             return redirect(url_for('login'))
+        ultimo = session.get('ultimo_acesso')
+        if ultimo:
+            diff = (datetime.now() - datetime.fromisoformat(ultimo)).total_seconds()
+            if diff > 1800:
+                session.clear()
+                flash('Sessão expirada por inatividade.', 'info')
+                return redirect(url_for('login'))
+        session['ultimo_acesso'] = datetime.now().isoformat()
         return f(*args, **kwargs)
     return decorated
 
@@ -212,8 +220,8 @@ def login():
         user = cursor.fetchone()
         conn.close()
         if user:
-            session.permanent = True
             session['logado'] = True
+            session['ultimo_acesso'] = datetime.now().isoformat()
             session['usuario'] = user['usuario']
             session['user_id'] = user['id']
             session['user_nome'] = user['nome']
