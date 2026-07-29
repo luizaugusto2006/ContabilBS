@@ -1,13 +1,36 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="dashboard">
+    <form method="GET" action="{{ url_for('dashboard') }}" class="dash-month-selector">
+        <label for="mes_selector">Mês:</label>
+        <select name="mes_id" id="mes_selector" onchange="this.form.submit()">
+            <option value="">--- Mês atual ---</option>
+            {% for m in todos_meses %}
+            <option value="{{ m.id }}" {% if mes_selecionado == m.id %}selected{% endif %}>
+                {{ m.mes | mes_nome }}/{{ m.ano }}{% if not m.fechado %} (aberto){% endif %}
+            </option>
+            {% endfor %}
+        </select>
+        <label class="dash-check-label">
+            <input type="checkbox" name="todos" value="1" {% if ver_todos %}checked{% endif %} onchange="this.form.submit()">
+            Todos os meses
+        </label>
+        <noscript><button type="submit" class="btn btn-small btn-primary">Filtrar</button></noscript>
+    </form>
+
+    {% if ver_todos %}
     <div class="dashboard-header">
-        {% if mes_atual %}
-        <h2>{{ mes_atual.mes | mes_nome }} / {{ mes_atual.ano }}</h2>
-        {% else %}
-        <h2>Nenhum mês ativo</h2>
-        {% endif %}
+        <h2>Todos os Meses</h2>
     </div>
+    {% elif mes_atual %}
+    <div class="dashboard-header">
+        <h2>{{ mes_atual.mes | mes_nome }} / {{ mes_atual.ano }}{% if not mes_atual.fechado %} <span class="badge badge-aberto">Aberto</span>{% endif %}</h2>
+    </div>
+    {% else %}
+    <div class="dashboard-header">
+        <h2>Nenhum mês encontrado</h2>
+    </div>
+    {% endif %}
 
     <div class="dashboard-cards">
         <div class="dash-card dash-card-entradas">
@@ -15,7 +38,7 @@
             <div class="dash-card-info">
                 <span class="dash-card-label">Entradas</span>
                 <span class="dash-card-value">{{ total_entradas | brl }}</span>
-                <span class="dash-card-sub">{{ qtd_entradas }} lançamentos</span>
+                <span class="dash-card-sub">{{ qtd_entradas }} lançamento{{ 's' if qtd_entradas != 1 }}</span>
             </div>
         </div>
         <div class="dash-card dash-card-saidas">
@@ -23,7 +46,7 @@
             <div class="dash-card-info">
                 <span class="dash-card-label">Saídas</span>
                 <span class="dash-card-value">{{ total_saidas | brl }}</span>
-                <span class="dash-card-sub">{{ qtd_saidas }} lançamentos</span>
+                <span class="dash-card-sub">{{ qtd_saidas }} lançamento{{ 's' if qtd_saidas != 1 }}</span>
             </div>
         </div>
         <div class="dash-card dash-card-saldo">
@@ -44,6 +67,7 @@
                     <tr>
                         <th>Data</th>
                         <th>Descrição</th>
+                        <th>Mês</th>
                         <th>Tipo</th>
                         <th>Valor</th>
                     </tr>
@@ -53,6 +77,7 @@
                     <tr class="row-{{ l.tipo }}">
                         <td>{{ l.data | data_br }}</td>
                         <td>{{ l.descricao }}</td>
+                        <td>{{ l.mes }}/{{ l.ano }}</td>
                         <td>
                             {% if l.tipo == 'entrada' %}
                             <span class="badge badge-entrada">Entrada</span>
@@ -67,7 +92,7 @@
             </table>
         </div>
         {% else %}
-        <p class="empty-msg">Nenhum lançamento neste mês.</p>
+        <p class="empty-msg">Nenhum lançamento neste período.</p>
         {% endif %}
     </div>
 </div>
