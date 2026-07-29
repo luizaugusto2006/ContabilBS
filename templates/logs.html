@@ -27,6 +27,18 @@
                             <span class="badge badge-aberto">Editou</span>
                         {% elif log.acao == 'excluiu' %}
                             <span class="badge badge-saida">Excluiu</span>
+                        {% elif log.acao == 'entrou' %}
+                            <span class="badge badge-entrada">Entrou</span>
+                        {% elif log.acao == 'saiu' %}
+                            <span class="badge badge-saida">Saiu</span>
+                        {% elif log.acao == 'finalizou' %}
+                            <span class="badge badge-saida">Finalizou</span>
+                        {% elif log.acao == 'reabriu' %}
+                            <span class="badge badge-aberto">Reabriu</span>
+                        {% elif log.acao == 'exportou' %}
+                            <span class="badge badge-info">Exportou</span>
+                        {% elif log.acao == 'restaurou' %}
+                            <span class="badge badge-info">Restaurou</span>
                         {% else %}
                             {{ log.acao }}
                         {% endif %}

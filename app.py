@@ -113,7 +113,11 @@ def login_required(f):
         if ultimo:
             diff = (datetime.now() - datetime.fromisoformat(ultimo)).total_seconds()
             if diff > 1800:
+                user = session.get('usuario')
+                user_id = session.get('user_id')
                 session.clear()
+                if user:
+                    registrar_log('saiu', 'sessao', user_id, f"Usuário: {user} (inatividade)")
                 flash('Sessão expirada por inatividade.', 'info')
                 return redirect(url_for('login'))
         session['ultimo_acesso'] = datetime.now().isoformat()
@@ -220,6 +224,7 @@ def login():
             session['user_id'] = user['id']
             session['user_nome'] = user['nome']
             session['admin'] = user['admin'] == 1
+            registrar_log('entrou', 'sessao', user['id'], f"Usuário: {user['usuario']} ({user['nome']})")
             index_url = url_for('index')
             return f'''<script>sessionStorage.setItem('bs_auth','1');window.location.replace('{index_url}');</script>'''
         flash('Usuário ou senha inválidos.', 'danger')
@@ -227,7 +232,11 @@ def login():
 
 @app.route('/logout')
 def logout():
+    user = session.get('usuario')
+    user_id = session.get('user_id')
     session.clear()
+    if user:
+        registrar_log('saiu', 'sessao', user_id, f"Usuário: {user}")
     flash('Você saiu do sistema.', 'info')
     return redirect(url_for('login'))
 
