@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard-header">
+        {% if mes_atual %}
+        <h2>{{ mes_atual.mes | mes_nome }} / {{ mes_atual.ano }}</h2>
+        {% else %}
+        <h2>Nenhum mês ativo</h2>
+        {% endif %}
+    </div>
+
+    <div class="dashboard-cards">
+        <div class="dash-card dash-card-entradas">
+            <div class="dash-card-icon">+</div>
+            <div class="dash-card-info">
+                <span class="dash-card-label">Entradas</span>
+                <span class="dash-card-value">{{ total_entradas | brl }}</span>
+                <span class="dash-card-sub">{{ qtd_entradas }} lançamentos</span>
+            </div>
+        </div>
+        <div class="dash-card dash-card-saidas">
+            <div class="dash-card-icon">-</div>
+            <div class="dash-card-info">
+                <span class="dash-card-label">Saídas</span>
+                <span class="dash-card-value">{{ total_saidas | brl }}</span>
+                <span class="dash-card-sub">{{ qtd_saidas }} lançamentos</span>
+            </div>
+        </div>
+        <div class="dash-card dash-card-saldo">
+            <div class="dash-card-icon">&#9632;</div>
+            <div class="dash-card-info">
+                <span class="dash-card-label">Saldo</span>
+                <span class="dash-card-value {% if saldo >= 0 %}saldo-positivo{% else %}saldo-negativo{% endif %}">{{ saldo | brl }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Últimos Lançamentos</h3>
+        {% if ultimos %}
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in ultimos %}
+                    <tr class="row-{{ l.tipo }}">
+                        <td>{{ l.data | data_br }}</td>
+                        <td>{{ l.descricao }}</td>
+                        <td>
+                            {% if l.tipo == 'entrada' %}
+                            <span class="badge badge-entrada">Entrada</span>
+                            {% else %}
+                            <span class="badge badge-saida">Saída</span>
+                            {% endif %}
+                        </td>
+                        <td class="valor">{{ l.valor | brl }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-msg">Nenhum lançamento neste mês.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -24,6 +24,7 @@
                 <button class="hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
             </div>
             <nav class="nav" id="nav-menu">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-nav">Dashboard</a>
                 <a href="{{ url_for('lancamentos') }}" class="btn btn-nav">Lançamentos</a>
                 <a href="{{ url_for('relatorio') }}" class="btn btn-nav">Relatórios</a>
                 <a href="{{ url_for('relatorio_saldos') }}" class="btn btn-nav">Saldos</a>
@@ -32,7 +33,7 @@
                     <a href="{{ url_for('ver_logs') }}" class="btn btn-nav">Logs</a>
                     <a href="{{ url_for('listar_usuarios') }}" class="btn btn-nav">Usuários</a>
                 {% endif %}
-                <span class="nav-spacer"></span>
+                <hr style="margin:4px 0;border:none;border-top:1px solid #eee;">
                 {% if session.get('admin') %}
                 <a href="{{ url_for('backup') }}" class="btn btn-nav btn-nav-backup" title="Download do banco de dados">Backup</a>
                 <form method="post" action="{{ url_for('restaurar_backup') }}" enctype="multipart/form-data" class="nav-form">

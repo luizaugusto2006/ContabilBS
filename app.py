@@ -253,6 +253,49 @@ def get_mes_aberto():
 def landing():
     return render_template('landing.html')
 
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    conn = get_db()
+    cursor = conn.cursor()
+    mes_id, saldo_inicial = get_mes_aberto()
+    if mes_id is None:
+        mes_id, saldo_inicial = get_or_create_mes_atual()
+    mes_atual = None
+    total_entradas = 0
+    total_saidas = 0
+    qtd_entradas = 0
+    qtd_saidas = 0
+    ultimos = []
+    if mes_id:
+        cursor.execute("SELECT mes, ano FROM meses WHERE id = ?", (mes_id,))
+        mes_atual = cursor.fetchone()
+        cursor.execute(
+            "SELECT COUNT(*), COALESCE(SUM(CASE WHEN tipo='entrada' THEN valor ELSE 0 END),0), "
+            "COALESCE(SUM(CASE WHEN tipo='saida' THEN valor ELSE 0 END),0) "
+            "FROM lancamentos WHERE mes_id = ?", (mes_id,)
+        )
+        row = cursor.fetchone()
+        qtd_entradas = row[0] if row else 0
+        total_entradas = row[1] if row else 0
+        total_saidas = row[2] if row else 0
+        cursor.execute(
+            "SELECT l.*, m.mes, m.ano FROM lancamentos l JOIN meses m ON l.mes_id=m.id "
+            "WHERE l.mes_id=? ORDER BY l.data DESC, l.id DESC LIMIT 5", (mes_id,)
+        )
+        ultimos = cursor.fetchall()
+    conn.close()
+    saldo = total_entradas - total_saidas
+    return render_template('dashboard.html',
+                         mes_atual=mes_atual,
+                         total_entradas=total_entradas,
+                         total_saidas=total_saidas,
+                         saldo=saldo,
+                         qtd_entradas=qtd_entradas,
+                         qtd_saidas=qtd_saidas,
+                         ultimos=ultimos,
+                         today=date.today().strftime('%d/%m/%Y'))
+
 @app.route('/lancamentos')
 @login_required
 def lancamentos():
