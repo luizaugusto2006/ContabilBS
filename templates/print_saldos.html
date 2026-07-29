@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Saldos - Barrasul Táxi</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #222; }
+        h1 { font-size: 1.6rem; margin-bottom: 5px; }
+        .subtitle { color: #666; margin-bottom: 25px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { background: #f0f0f0; padding: 10px 12px; text-align: left; border: 1px solid #ccc; font-size: 0.85rem; }
+        td { padding: 8px 12px; border: 1px solid #ddd; }
+        .valor { text-align: right; font-family: 'Courier New', monospace; font-weight: 600; }
+        .positivo { color: #28a745; }
+        .negativo { color: #dc3545; }
+        .footer { margin-top: 30px; text-align: center; color: #999; font-size: 0.8rem; }
+        @media print { body { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <h1>Sistema Contábil Barrasul Táxi</h1>
+    <p class="subtitle"><strong>Relatório de Saldos dos Meses Fechados</strong></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Mês</th>
+                <th>Fechado em</th>
+                <th class="valor">Saldo Final</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in dados %}
+            <tr>
+                <td><strong>{{ d.mes | mes_nome }} {{ d.ano }}</strong></td>
+                <td>{{ d.fechado_em }}</td>
+                <td class="valor {% if d.saldo >= 0 %}positivo{% else %}negativo{% endif %}">{{ d.saldo | brl }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td><strong>Acumulado</strong></td>
+                <td></td>
+                <td class="valor {% if saldo_acumulado >= 0 %}positivo{% else %}negativo{% endif %}">{{ saldo_acumulado | brl }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="footer">
+        <p>Relatório gerado em {{ now.strftime('%d/%m/%Y %H:%M') }} — Barrasul Táxi</p>
+    </div>
+
+    <script>window.print();</script>
+</body>
+</html>

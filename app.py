@@ -567,6 +567,55 @@ def relatorio_saldos():
     saldo_acumulado = sum(d['saldo'] for d in dados)
     return render_template('relatorio_saldos.html', dados=dados, saldo_acumulado=saldo_acumulado)
 
+@app.route('/exportar-csv-saldos')
+@login_required
+def exportar_csv_saldos():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM meses WHERE fechado = 1 ORDER BY ano, mes")
+    meses = cursor.fetchall()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Mês', 'Ano', 'Fechado em', 'Saldo Inicial', 'Entradas', 'Saídas', 'Saldo Final'])
+    for m in meses:
+        cursor.execute(
+            "SELECT COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) as te, "
+            "COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) as ts "
+            "FROM lancamentos WHERE mes_id = ?", (m['id'],)
+        )
+        t = cursor.fetchone()
+        saldo = m['saldo_inicial'] + t['te'] - t['ts']
+        writer.writerow([f"{m['mes']:02d}", m['ano'], m['fechado_em'],
+                        f"{m['saldo_inicial']:.2f}", f"{t['te']:.2f}", f"{t['ts']:.2f}", f"{saldo:.2f}"])
+    conn.close()
+    return Response(
+        output.getvalue().encode('utf-8-sig'),
+        mimetype='text/csv',
+        headers={"Content-Disposition": "attachment;filename=saldos.csv"}
+    )
+
+@app.route('/print-saldos')
+@login_required
+def print_saldos():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM meses WHERE fechado = 1 ORDER BY ano, mes")
+    meses = cursor.fetchall()
+    dados = []
+    for m in meses:
+        cursor.execute(
+            "SELECT COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) as te, "
+            "COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) as ts "
+            "FROM lancamentos WHERE mes_id = ?", (m['id'],)
+        )
+        t = cursor.fetchone()
+        saldo = m['saldo_inicial'] + t['te'] - t['ts']
+        dados.append({'mes': m['mes'], 'ano': m['ano'],
+                      'saldo': saldo, 'fechado_em': m['fechado_em']})
+    conn.close()
+    saldo_acumulado = sum(d['saldo'] for d in dados)
+    return render_template('print_saldos.html', dados=dados, saldo_acumulado=saldo_acumulado, now=datetime.now())
+
 @app.route('/dados-grafico')
 @login_required
 def dados_grafico():
