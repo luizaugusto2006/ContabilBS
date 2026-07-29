@@ -115,9 +115,9 @@ def login_required(f):
             if diff > 1800:
                 user = session.get('usuario')
                 user_id = session.get('user_id')
-                session.clear()
                 if user:
-                    registrar_log('saiu', 'sessao', user_id, f"Usuário: {user} (inatividade)")
+                    registrar_log('saiu', 'Sessão', user_id, f"Usuário: {user} (inatividade)")
+                session.clear()
                 flash('Sessão expirada por inatividade.', 'info')
                 return redirect(url_for('login'))
         session['ultimo_acesso'] = datetime.now().isoformat()
@@ -224,7 +224,7 @@ def login():
             session['user_id'] = user['id']
             session['user_nome'] = user['nome']
             session['admin'] = user['admin'] == 1
-            registrar_log('entrou', 'sessao', user['id'], f"Usuário: {user['usuario']} ({user['nome']})")
+            registrar_log('entrou', 'Sessão', user['id'], f"Usuário: {user['usuario']} ({user['nome']})")
             index_url = url_for('index')
             return f'''<script>sessionStorage.setItem('bs_auth','1');window.location.replace('{index_url}');</script>'''
         flash('Usuário ou senha inválidos.', 'danger')
@@ -232,11 +232,9 @@ def login():
 
 @app.route('/logout')
 def logout():
-    user = session.get('usuario')
-    user_id = session.get('user_id')
+    if session.get('usuario'):
+        registrar_log('saiu', 'Sessão', session.get('user_id'), f"Usuário: {session.get('usuario')}")
     session.clear()
-    if user:
-        registrar_log('saiu', 'sessao', user_id, f"Usuário: {user}")
     flash('Você saiu do sistema.', 'info')
     return redirect(url_for('login'))
 
@@ -352,7 +350,7 @@ def adicionar():
     conn.commit()
     novo_id = cursor.lastrowid
     conn.close()
-    registrar_log('criou', 'lancamento', novo_id, f"{descricao} - {tipo} - R$ {valor:.2f}")
+    registrar_log('criou', 'Lançamento', novo_id, f"{descricao} - {tipo} - R$ {valor:.2f}")
     flash('Lançamento adicionado com sucesso!', 'success')
     return redirect(url_for('index'))
 
@@ -404,7 +402,7 @@ def editar(id):
         )
         conn.commit()
         conn.close()
-        registrar_log('editou', 'lancamento', id, f"{descricao} - {tipo} - R$ {valor:.2f}")
+        registrar_log('editou', 'Lançamento', id, f"{descricao} - {tipo} - R$ {valor:.2f}")
         flash('Lançamento atualizado com sucesso!', 'success')
         return redirect(url_for('index'))
 
@@ -421,7 +419,7 @@ def excluir(id):
     cursor.execute("DELETE FROM lancamentos WHERE id = ?", (id,))
     conn.commit()
     conn.close()
-    registrar_log('excluiu', 'lancamento', id, desc)
+    registrar_log('excluiu', 'Lançamento', id, desc)
     flash('Lançamento excluído.', 'info')
     return redirect(url_for('index'))
 
@@ -471,7 +469,7 @@ def finalizar_mes():
     )
     conn.commit()
     conn.close()
-    registrar_log('finalizou', 'mes', mes_id, f"Mês {m['mes']:02d}/{m['ano']}")
+    registrar_log('finalizou', 'Mês', mes_id, f"Mês {m['mes']:02d}/{m['ano']}")
     flash('Mês finalizado com sucesso!', 'success')
     return redirect(url_for('relatorio'))
 
@@ -509,7 +507,7 @@ def novo_mes():
     conn.commit()
     novo_id = cursor.lastrowid
     conn.close()
-    registrar_log('criou', 'mes', novo_id, f"Mês {mes:02d}/{ano}")
+    registrar_log('criou', 'Mês', novo_id, f"Mês {mes:02d}/{ano}")
     flash(f'Novo mês ({mes:02d}/{ano}) iniciado!', 'success')
     return redirect(url_for('index'))
 
@@ -791,7 +789,7 @@ def reabrir_mes(mes_id):
     conn.commit()
     conn.close()
     nome_mes = f"{mes['mes']:02d}/{mes['ano']}"
-    registrar_log('reabriu', 'mes', mes_id, f"Mês {nome_mes}")
+    registrar_log('reabriu', 'Mês', mes_id, f"Mês {nome_mes}")
     flash(f'Mês {nome_mes} reaberto. Verifique o saldo inicial do próximo mês, se houver.', 'warning')
     return redirect(url_for('detalhes_mes', mes_id=mes_id))
 
@@ -810,7 +808,7 @@ def excluir_mes(mes_id):
     cursor.execute("DELETE FROM meses WHERE id = ?", (mes_id,))
     conn.commit()
     conn.close()
-    registrar_log('excluiu', 'mes', mes_id, f"Mês {mes['mes']:02d}/{mes['ano']} e seus lançamentos")
+    registrar_log('excluiu', 'Mês', mes_id, f"Mês {mes['mes']:02d}/{mes['ano']} e seus lançamentos")
     flash(f'Mês {mes["mes"]:02d}/{mes["ano"]} e seus lançamentos foram excluídos.', 'success')
     return redirect(url_for('relatorio'))
 
@@ -882,7 +880,7 @@ def backup():
     if not os.path.exists(DB_PATH):
         flash('Banco de dados não encontrado.', 'danger')
         return redirect(url_for('relatorio'))
-    registrar_log('exportou', 'backup', 0, 'Download do backup do banco de dados')
+    registrar_log('exportou', 'Backup', 0, 'Download do backup do banco de dados')
     return send_file(DB_PATH, as_attachment=True, download_name=f'contabil_backup_{date.today().isoformat()}.db')
 
 @app.route('/restore', methods=['POST'])
@@ -904,7 +902,7 @@ def restaurar_backup():
         if os.path.exists(db_temp):
             os.remove(db_temp)
         _DB_INITIALIZED = False
-        registrar_log('restaurou', 'backup', 0, f'Backup restaurado de: {arquivo.filename}')
+        registrar_log('restaurou', 'Backup', 0, f'Backup restaurado de: {arquivo.filename}')
         flash('Backup restaurado com sucesso!', 'success')
     except Exception as e:
         if os.path.exists(db_temp):
@@ -961,7 +959,7 @@ def adicionar_usuario():
             (usuario, senha, nome, admin)
         )
         conn.commit()
-        registrar_log('criou', 'usuario', cursor.lastrowid, f"Usuário: {usuario}")
+        registrar_log('criou', 'Usuário', cursor.lastrowid, f"Usuário: {usuario}")
         flash('Usuário cadastrado com sucesso!', 'success')
     except sqlite3.IntegrityError:
         flash('Usuário já existe.', 'danger')
@@ -989,7 +987,7 @@ def excluir_usuario(id):
     cursor.execute("DELETE FROM usuarios WHERE id = ?", (id,))
     conn.commit()
     conn.close()
-    registrar_log('excluiu', 'usuario', id, f"Usuário: {user['usuario']}")
+    registrar_log('excluiu', 'Usuário', id, f"Usuário: {user['usuario']}")
     flash('Usuário excluído.', 'info')
     return redirect(url_for('listar_usuarios'))
 
@@ -1021,7 +1019,7 @@ def editar_usuario(id):
             )
         conn.commit()
         conn.close()
-        registrar_log('editou', 'usuario', id, f"Usuário: {user['usuario']}")
+        registrar_log('editou', 'Usuário', id, f"Usuário: {user['usuario']}")
         flash('Usuário atualizado com sucesso!', 'success')
         return redirect(url_for('listar_usuarios'))
 

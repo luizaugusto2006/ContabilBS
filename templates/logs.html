@@ -43,7 +43,7 @@
                             {{ log.acao }}
                         {% endif %}
                     </td>
-                    <td>{{ log.entidade }} #{{ log.entidade_id }}</td>
+                    <td>{{ log.entidade }} {{ log.entidade_id }}</td>
                     <td>{{ log.descricao }}</td>
                     <td>
                         <form method="post" action="{{ url_for('excluir_log', log_id=log.id) }}" onsubmit="return confirm('Excluir este log?')">
