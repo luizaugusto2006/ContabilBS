@@ -43,11 +43,14 @@ body {
     line-height: 1;
 }
 
+.hamburger:hover {
+    color: #5a6fd6;
+}
+
 .logo-area {
     display: flex;
     align-items: center;
     gap: 20px;
-    margin-bottom: 12px;
 }
 
 .logo {
@@ -70,12 +73,17 @@ body {
 }
 
 .nav {
-    display: flex;
-    gap: 10px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
     border-top: 1px solid #eee;
     padding-top: 12px;
-    align-items: center;
-    flex-wrap: wrap;
+    margin-top: 12px;
+    align-items: stretch;
+}
+
+.nav.nav-open {
+    display: flex;
 }
 
 .nav .btn-nav {
